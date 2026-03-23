@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pd-ai-coder — AIと対話してPure Dataパッチを生成</title>
+  <meta name="description" content="pd-ai-coderは、自然言語でPure Data（Plugdata）パッチを対話的に生成・編集できるデスクトップアプリです。" />
+  <meta property="og:title" content="pd-ai-coder — AIと対話してPure Dataパッチを生成" />
+  <meta property="og:description" content="自然言語でPure Data（Plugdata）パッチを対話的に生成・編集できるデスクトップアプリ" />
+  <meta property="og:type" content="website" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #e4e4e7;
+      --text-muted: rgba(255,255,255,0.5);
+      --accent-green: #22c55e;
+      --accent-blue: #3b82f6;
+      --accent-purple: #7c3aed;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    .bg-glow {
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(34,197,94,0.12) 0%, rgba(59,130,246,0.06) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .header-logo span {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--accent-green), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-links { display: flex; gap: 20px; align-items: center; }
+    .header-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .header-links a:hover { color: #fff; }
+    .header-links .btn-sm {
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      color: var(--text);
+    }
+    .header-links .btn-sm:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 100px 0 80px;
+    }
+    .hero-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 8vw, 64px);
+      font-weight: 800;
+      background: linear-gradient(to right, var(--accent-green), var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .hero .subtitle {
+      font-size: clamp(16px, 3vw, 22px);
+      color: var(--text-muted);
+      margin-top: 16px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-buttons {
+      margin-top: 40px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, var(--accent-green), var(--accent-blue));
+      color: #fff;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary {
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: var(--text);
+      background: transparent;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); }
+    .btn svg { width: 18px; height: 18px; }
+
+    /* Section */
+    section { padding: 80px 0; }
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .section-desc {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 680px;
+      margin: 0 auto 48px;
+    }
+
+    /* Features grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(255,255,255,0.15); }
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Demo */
+    .demo-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 640px;
+      margin: 0 auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .demo-user { color: var(--accent-green); }
+    .demo-ai { color: var(--accent-blue); }
+    .demo-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .demo-msg {
+      margin-bottom: 16px;
+      padding-left: 16px;
+      border-left: 2px solid var(--border);
+    }
+    .demo-msg:last-child { margin-bottom: 0; }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      counter-reset: step;
+    }
+    .step {
+      text-align: center;
+      padding: 24px;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(to right, var(--accent-green), var(--accent-blue));
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      margin: 0 auto 16px;
+    }
+    .step h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Requirements */
+    .req-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .req-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .req-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .req-card .tech {
+      font-size: 12px;
+      color: var(--accent-green);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .req-card p, .req-card li {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .req-card ol {
+      padding-left: 20px;
+      line-height: 2;
+    }
+
+    /* Architecture */
+    .arch-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .arch-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .arch-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .arch-card .tech {
+      font-size: 12px;
+      color: var(--accent-purple);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .arch-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 80px 0 100px;
+    }
+    .cta h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .cta p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: #fff; }
+
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .hero { padding: 60px 0 50px; }
+      section { padding: 50px 0; }
+      .header-links .hide-mobile { display: none; }
+      .demo-block { padding: 20px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <header>
+      <a href="#" class="header-logo">
+        <span>pd-ai-coder</span>
+      </a>
+      <div class="header-links">
+        <a href="#features" class="hide-mobile">Features</a>
+        <a href="#how" class="hide-mobile">How it works</a>
+        <a href="#install" class="hide-mobile">Install</a>
+        <a href="https://github.com/634nakajima/pd-ai-coder" target="_blank" class="btn-sm">GitHub</a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-icon">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <h1>pd-ai-coder</h1>
+      <p class="subtitle">
+        AIと自然言語で対話しながら<br />Pure Data (Plugdata) パッチを<br />生成・編集できるデスクトップアプリ
+      </p>
+      <div class="hero-buttons">
+        <a href="https://github.com/634nakajima/pd-ai-coder/releases/latest/download/pd-ai-coder-0.1.0-arm64-mac.zip" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          macOS (Apple Silicon)
+        </a>
+        <a href="https://github.com/634nakajima/pd-ai-coder" target="_blank" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- Demo -->
+    <section>
+      <h2 class="section-title">Demo</h2>
+      <p class="section-desc">自然言語で指示するだけで、Pdパッチが生成されます</p>
+      <div class="demo-block">
+        <div class="demo-msg">
+          <div class="demo-label demo-user">You</div>
+          <div>FM合成で金属的なベルの音を作りたい</div>
+        </div>
+        <div class="demo-msg">
+          <div class="demo-label demo-ai">AI</div>
+          <div>キャリア周波数とモジュレータの比率を非整数比にして金属的な倍音を生成するFMパッチを作成しました。Plugdataで開きます。</div>
+        </div>
+        <div class="demo-msg">
+          <div class="demo-label demo-user">You</div>
+          <div>アタックをもう少し鋭くして、ディレイも足して</div>
+        </div>
+        <div class="demo-msg">
+          <div class="demo-label demo-ai">AI</div>
+          <div>エンベロープのアタックを短くし、else/fbdelay~でフィードバックディレイを追加しました。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+      <h2 class="section-title">Features</h2>
+      <p class="section-desc">AIコーディングの体験をPure Dataに</p>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(34,197,94,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#22c55e"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+          </div>
+          <h3>自然言語でパッチ生成</h3>
+          <p>「グラニュラー合成のパッチを作って」のように日本語で指示するだけ。Pdの構文を知らなくても音響パッチを作れます。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(59,130,246,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#3b82f6"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </div>
+          <h3>対話的な修正</h3>
+          <p>生成されたパッチに対して「フィルタを追加して」「もっとシンプルに」と追加指示。会話の流れで音を作り込めます。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(124,58,237,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#7c3aed"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+          </div>
+          <h3>既存パッチの編集</h3>
+          <p>手元の.pdファイルを読み込んでAIに修正を依頼。Plugdataで手動編集した内容もAIが把握して続きを修正できます。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(251,191,36,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fbbf24"><path d="M7 5h10v2h2V3c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v4h2V5zm8.41 11.59L20 12l-4.59-4.59L14 8.83 17.17 12 14 15.17l1.41 1.42zM10 15.17L6.83 12 10 8.83 8.59 7.41 4 12l4.59 4.59L10 15.17zM17 19H7v-2H5v4c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-4h-2v2z"/></svg>
+          </div>
+          <h3>micro:bit連携</h3>
+          <p>「明るさセンサの値で周波数を変えるパッチ」のような指示で、micro:bitとの連携パッチも正しく生成します。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(236,72,153,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#ec4899"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          </div>
+          <h3>ELSE / Plugdata対応</h3>
+          <p>ELSEライブラリのオブジェクト（out~, fbdelay~, crusher~等）を活用した、シンプルで実用的なパッチを生成します。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(99,102,241,0.15);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#6366f1"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+          </div>
+          <h3>Plugdataで即プレビュー</h3>
+          <p>生成されたパッチは自動的にPlugdataで開かれます。すぐに音を確認して、手動で微調整できます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-desc">AIと対話しながらパッチを作るワークフロー</p>
+      <div class="steps">
+        <div class="step">
+          <h3>自然言語で指示</h3>
+          <p>チャット画面で作りたい音やエフェクトを日本語で伝えます。</p>
+        </div>
+        <div class="step">
+          <h3>AIがパッチ生成</h3>
+          <p>Claude AIがPdの構文ルールに従ってパッチを生成。Plugdataで自動的に開きます。</p>
+        </div>
+        <div class="step">
+          <h3>試聴 &amp; 手直し</h3>
+          <p>Plugdataで音を確認。気になる部分はAIに修正を依頼するか、自分で直接編集します。</p>
+        </div>
+        <div class="step">
+          <h3>繰り返し改善</h3>
+          <p>AIとの対話と手動編集を自由に行き来しながら、理想の音に近づけていきます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install">
+      <h2 class="section-title">Install</h2>
+      <p class="section-desc">セットアップ手順</p>
+      <div class="req-cards">
+        <div class="req-card">
+          <h3>必要なもの</h3>
+          <div class="tech">事前にインストールが必要</div>
+          <ol>
+            <li><a href="https://plugdata.org/" target="_blank" style="color:var(--accent-green);">Plugdata</a> (Pure Data)</li>
+            <li><a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank" style="color:var(--accent-green);">Claude Code CLI</a></li>
+            <li>Claude アカウント（無料プランでも利用可能）</li>
+          </ol>
+        </div>
+        <div class="req-card">
+          <h3>macOS (Apple Silicon)</h3>
+          <div class="tech">pd-ai-coder-0.1.0-arm64-mac.zip</div>
+          <ol>
+            <li>zipファイルをダウンロードして解凍</li>
+            <li><code>pd-ai-coder.app</code> をダブルクリック</li>
+            <li>初回起動時は右クリック &rarr;「開く」を選択</li>
+            <li>「開発元が未確認」の警告が出た場合は<br /><strong style="color:var(--text);">システム設定 &rarr; プライバシーとセキュリティ &rarr;「このまま開く」</strong></li>
+            <li>初回のみClaude認証画面が表示されます（ブラウザでログイン）</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section>
+      <h2 class="section-title">Architecture</h2>
+      <p class="section-desc">シンプルな構成</p>
+      <div class="arch-cards">
+        <div class="arch-card">
+          <h3>Desktop App</h3>
+          <div class="tech">Electron / React / TypeScript</div>
+          <p>チャットUIを提供するデスクトップアプリ。Claude Code CLIをバックエンドとして呼び出します。</p>
+        </div>
+        <div class="arch-card">
+          <h3>AI Engine</h3>
+          <div class="tech">Claude Code CLI / Claude API</div>
+          <p>自然言語を理解し、Pure Dataの構文ルールに従った正確なパッチコードを生成します。</p>
+        </div>
+        <div class="arch-card">
+          <h3>Sound Engine</h3>
+          <div class="tech">Plugdata (Pure Data + ELSE)</div>
+          <p>生成されたパッチを実行する音響エンジン。ELSEライブラリの豊富なオブジェクトを活用します。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta">
+      <h2>AIと一緒に音を作ろう</h2>
+      <p>オープンソースで無料。Pure Dataの新しい制作体験を。</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/634nakajima/pd-ai-coder/releases/latest/download/pd-ai-coder-0.1.0-arm64-mac.zip" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          macOS (Apple Silicon)
+        </a>
+        <a href="https://github.com/634nakajima/pd-ai-coder" target="_blank" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 pd-ai-coder &mdash; AI-powered Pure Data patch generator</p>
+    </footer>
+  </div>
+</body>
+</html>
