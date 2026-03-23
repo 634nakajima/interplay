@@ -1,0 +1,8 @@
+#N canvas 0 0 500 350 12;
+#X text 20 20 pd-ai-receiver: pd-ai-coderからの接続を受け付けるパッチ;
+#X text 20 50 このパッチを開いた状態でpd_ai_coder.pyを実行してください;
+#X obj 20 100 netreceive 3001;
+#X obj 20 140 print [FUDI];
+#X text 20 180 --- AI生成パッチはこの下のサブパッチに展開されます ---;
+#X text 20 280 port: 3001 (TCP);
+#X connect 2 0 3 0;
