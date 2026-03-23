@@ -7,6 +7,7 @@ declare global {
   interface Window {
     api: {
       sendMessage: (text: string) => Promise<any>;
+      cancelMessage: () => Promise<any>;
       resetSession: () => Promise<any>;
       getStatus: () => Promise<any>;
       checkAuth: () => Promise<{ loggedIn: boolean }>;
@@ -125,7 +126,15 @@ export default function App() {
           </button>
         </div>
       </header>
-      <ChatView messages={messages} loading={loading} onSend={handleSend} />
+      <ChatView
+        messages={messages}
+        loading={loading}
+        onSend={handleSend}
+        onCancel={async () => {
+          await window.api.cancelMessage();
+          setLoading(false);
+        }}
+      />
       <StatusBar status={status} />
     </div>
   );

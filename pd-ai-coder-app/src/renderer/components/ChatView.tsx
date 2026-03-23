@@ -6,10 +6,12 @@ interface Props {
   messages: Message[];
   loading: boolean;
   onSend: (text: string) => void;
+  onCancel: () => void;
 }
 
-export default function ChatView({ messages, loading, onSend }: Props) {
+export default function ChatView({ messages, loading, onSend, onCancel }: Props) {
   const [input, setInput] = useState("");
+  const [elapsed, setElapsed] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isComposingRef = useRef(false);
@@ -17,6 +19,13 @@ export default function ChatView({ messages, loading, onSend }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (!loading) { setElapsed(0); return; }
+    setElapsed(0);
+    const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (!loading) inputRef.current?.focus();
@@ -59,7 +68,16 @@ export default function ChatView({ messages, loading, onSend }: Props) {
         ))}
         {loading && (
           <div className="message assistant">
-            <div className="bubble loading">考え中...</div>
+            <div className="bubble loading">
+              <span className="loading-spinner" />
+              <span>考え中... {elapsed}秒</span>
+              <span className="loading-hint">
+                複雑なパッチの生成には時間がかかることがあります
+              </span>
+              <button className="cancel-btn" onClick={onCancel}>
+                キャンセル
+              </button>
+            </div>
           </div>
         )}
         <div ref={bottomRef} />

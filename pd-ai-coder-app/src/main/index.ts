@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { spawn, execSync } from "child_process";
 import path from "path";
-import { callAI, resetSession, findClaudeBin } from "./ai-service";
+import { callAI, resetSession, cancelAI, findClaudeBin } from "./ai-service";
 import {
   readPatch,
   writePatch,
@@ -120,6 +120,11 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
     console.error("[main] error:", err.message);
     return { error: err.message || "不明なエラー" };
   }
+});
+
+ipcMain.handle("chat:cancel", () => {
+  cancelAI();
+  return { ok: true };
 });
 
 ipcMain.handle("chat:reset", () => {

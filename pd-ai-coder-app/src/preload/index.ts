@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("api", {
   sendMessage: (text: string) => ipcRenderer.invoke("chat:send", text),
+  cancelMessage: () => ipcRenderer.invoke("chat:cancel"),
   resetSession: () => ipcRenderer.invoke("chat:reset"),
   getStatus: () => ipcRenderer.invoke("status:get"),
   checkAuth: () => ipcRenderer.invoke("auth:check"),

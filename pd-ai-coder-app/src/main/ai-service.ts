@@ -1,9 +1,17 @@
-import { spawn, execSync } from "child_process";
+import { spawn, execSync, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import { SYSTEM_PROMPT } from "./system-prompt";
 
 let sessionId: string | null = null;
+let activeChild: ChildProcess | null = null;
+
+export function cancelAI(): void {
+  if (activeChild) {
+    activeChild.kill();
+    activeChild = null;
+  }
+}
 
 export function findClaudeBin(): string {
   const candidates = [
@@ -68,6 +76,7 @@ export function callAI(fullMessage: string): Promise<string> {
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env },
     });
+    activeChild = child;
 
     let stdout = "";
     let stderr = "";
@@ -82,8 +91,8 @@ export function callAI(fullMessage: string): Promise<string> {
 
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error("タイムアウト（180秒）"));
-    }, 180_000);
+      reject(new Error("タイムアウト（5分）"));
+    }, 300_000);
 
     child.on("error", (err) => {
       clearTimeout(timer);
@@ -93,6 +102,7 @@ export function callAI(fullMessage: string): Promise<string> {
 
     child.on("close", (code) => {
       clearTimeout(timer);
+      activeChild = null;
       console.log("[ai-service] process closed, code:", code, "stdout length:", stdout.length);
 
       if (code !== 0 && !stdout) {
