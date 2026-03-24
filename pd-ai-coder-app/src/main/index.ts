@@ -10,6 +10,13 @@ import {
   getPatchMtime,
 } from "./pd-file";
 import { openPatchInPd } from "./file-opener";
+import {
+  listSerialPorts,
+  connectSerial,
+  disconnectSerial,
+  getSerialOSCStatus,
+  setOSCDestination,
+} from "./serial-osc";
 import os from "os";
 import fs from "fs";
 
@@ -200,6 +207,30 @@ ipcMain.handle("auth:login", async () => {
       resolve({ success: false });
     }
   });
+});
+
+// --- SerialOSC IPC Handlers ---
+
+ipcMain.handle("serial:list", async () => {
+  return await listSerialPorts();
+});
+
+ipcMain.handle("serial:connect", (_event, portPath: string) => {
+  return connectSerial(portPath);
+});
+
+ipcMain.handle("serial:disconnect", () => {
+  disconnectSerial();
+  return { ok: true };
+});
+
+ipcMain.handle("serial:status", () => {
+  return getSerialOSCStatus();
+});
+
+ipcMain.handle("serial:setDest", (_event, host: string, port: number) => {
+  setOSCDestination(host, port);
+  return { ok: true };
 });
 
 // --- App Lifecycle ---

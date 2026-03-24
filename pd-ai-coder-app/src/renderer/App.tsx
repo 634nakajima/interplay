@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ChatView from "./components/ChatView";
 import StatusBar from "./components/StatusBar";
 import LoginScreen from "./components/LoginScreen";
+import SerialOSCPanel from "./components/SerialOSCPanel";
 
 declare global {
   interface Window {
@@ -33,6 +34,7 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"chat" | "serial">("chat");
 
   useEffect(() => {
     window.api.checkAuth().then((result) => {
@@ -119,23 +121,44 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>pd-ai-coder</h1>
-        <span className="subtitle">AI-powered Pure Data Development</span>
-        <div className="header-actions">
-          <button className="header-btn" onClick={handleLoadPatch}>
-            開く
+        <div className="header-tabs">
+          <button
+            className={`tab-btn ${activeTab === "chat" ? "active" : ""}`}
+            onClick={() => setActiveTab("chat")}
+          >
+            Chat
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "serial" ? "active" : ""}`}
+            onClick={() => setActiveTab("serial")}
+          >
+            Serial/OSC
           </button>
         </div>
+        <div className="header-actions">
+          {activeTab === "chat" && (
+            <button className="header-btn" onClick={handleLoadPatch}>
+              開く
+            </button>
+          )}
+        </div>
       </header>
-      <ChatView
-        messages={messages}
-        loading={loading}
-        onSend={handleSend}
-        onCancel={async () => {
-          await window.api.cancelMessage();
-          setLoading(false);
-        }}
-      />
-      <StatusBar status={status} />
+      {activeTab === "chat" ? (
+        <>
+          <ChatView
+            messages={messages}
+            loading={loading}
+            onSend={handleSend}
+            onCancel={async () => {
+              await window.api.cancelMessage();
+              setLoading(false);
+            }}
+          />
+          <StatusBar status={status} />
+        </>
+      ) : (
+        <SerialOSCPanel />
+      )}
     </div>
   );
 }

@@ -8,4 +8,10 @@ contextBridge.exposeInMainWorld("api", {
   checkAuth: () => ipcRenderer.invoke("auth:check"),
   login: () => ipcRenderer.invoke("auth:login"),
   loadPatch: () => ipcRenderer.invoke("patch:load"),
+  // SerialOSC
+  serialList: () => ipcRenderer.invoke("serial:list"),
+  serialConnect: (portPath: string) => ipcRenderer.invoke("serial:connect", portPath),
+  serialDisconnect: () => ipcRenderer.invoke("serial:disconnect"),
+  serialStatus: () => ipcRenderer.invoke("serial:status"),
+  serialSetDest: (host: string, port: number) => ipcRenderer.invoke("serial:setDest", host, port),
 });
