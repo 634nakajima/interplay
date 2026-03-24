@@ -373,6 +373,7 @@
         <a href="#features" class="hide-mobile">Features</a>
         <a href="#how" class="hide-mobile">How it works</a>
         <a href="#install" class="hide-mobile">Install</a>
+        <a href="#microbit" class="hide-mobile">micro:bit</a>
         <a href="https://github.com/634nakajima/pd-ai-coder" target="_blank" class="btn-sm">GitHub</a>
       </div>
     </header>
@@ -522,6 +523,44 @@
             <li>「開発元が未確認」の警告が出た場合は<br /><strong style="color:var(--text);">システム設定 &rarr; プライバシーとセキュリティ &rarr;「このまま開く」</strong></li>
             <li>初回のみClaude認証画面が表示されます（ブラウザでログイン）</li>
           </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- micro:bit -->
+    <section id="microbit">
+      <h2 class="section-title">micro:bit 連携</h2>
+      <p class="section-desc">センサの値でリアルタイムに音を制御する</p>
+      <div class="steps" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="step">
+          <h3>プログラムを書き込む</h3>
+          <p><a href="https://makecode.microbit.org/S19392-01978-77199-41699" target="_blank" style="color:var(--accent-green);">MakeCodeプロジェクト</a>を開き、micro:bitにダウンロードします。</p>
+        </div>
+        <div class="step">
+          <h3>USBで接続</h3>
+          <p>micro:bitをPCにUSBケーブルで接続します。</p>
+        </div>
+        <div class="step">
+          <h3>Serial/OSCで接続</h3>
+          <p>アプリのSerial/OSCタブでシリアルポートを選んで接続します。センサ値がOSCに変換されます。</p>
+        </div>
+        <div class="step">
+          <h3>AIにパッチを依頼</h3>
+          <p>Chatタブで「明るさセンサの値で周波数を変えるパッチを作って」と指示すれば、対応するパッチが生成されます。</p>
+        </div>
+      </div>
+      <div style="margin-top: 32px;">
+        <div class="req-cards">
+          <div class="req-card">
+            <h3>利用可能なセンサ</h3>
+            <div class="tech">MakeCodeプログラムに含まれるセンサ</div>
+            <ul style="color:var(--text-muted); font-size:14px; padding-left:20px; line-height:2;">
+              <li><code>/brightness</code> &mdash; 明るさセンサ（0〜255）</li>
+              <li><code>/p0</code> &mdash; P0端子のアナログ値（0〜1023）</li>
+              <li><code>/accX</code> <code>/accY</code> <code>/accZ</code> &mdash; 加速度センサ</li>
+              <li><code>/sound</code> &mdash; 音センサ（0〜255）</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
