@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Interplay — AIと対話してPure Dataパッチを生成</title>
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <meta name="description" content="Interplayは、自然言語でPure Data（plugdata）パッチを対話的に生成・編集できるデスクトップアプリです。" />
   <meta property="og:title" content="Interplay — AIと対話してPure Dataパッチを生成" />
   <meta property="og:description" content="自然言語でPure Data（plugdata）パッチを対話的に生成・編集できるデスクトップアプリ" />
@@ -51,8 +53,19 @@
     }
 
     /* Header */
+    .header-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(240, 240, 240, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
     header {
-      padding: 20px 0;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -364,9 +377,10 @@
 <body>
   <div class="bg-glow"></div>
 
-  <div class="container">
+  <div class="header-wrap">
     <header>
       <a href="#" class="header-logo">
+        <img src="images/logo.png" alt="Interplay" style="width: 28px; height: 28px;" />
         <span>Interplay</span>
       </a>
       <div class="header-links">
@@ -377,14 +391,14 @@
         <a href="https://github.com/634nakajima/Interplay" target="_blank" class="btn-sm">GitHub</a>
       </div>
     </header>
+  </div>
+
+  <div class="container">
 
     <!-- Hero -->
     <div class="hero">
       <div class="hero-icon">
-        <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#16a34a"/></linearGradient></defs>
-          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-        </svg>
+        <img src="images/logo.png" alt="Interplay" style="width: 120px; height: 120px;" />
       </div>
       <h1>Interplay</h1>
       <p class="subtitle">

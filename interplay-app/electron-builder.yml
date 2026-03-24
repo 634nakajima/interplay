@@ -4,6 +4,7 @@ directories:
   output: release
 mac:
   category: public.app-category.music
+  icon: resources/icon.icns
   target:
     - dmg
     - zip
