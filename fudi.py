@@ -76,13 +76,13 @@ class FUDIClient:
 
 
 class PdFileOpener:
-    """Open .pd files in Pd/Plugdata."""
+    """Open .pd files in Pd/plugdata."""
 
     def __init__(self, fudi: FUDIClient | None = None):
         self.fudi = fudi
 
     def open_patch(self, filepath: str):
-        """Open a .pd file using the OS default application (Plugdata/Pd)."""
+        """Open a .pd file using the OS default application (plugdata/Pd)."""
         filepath = os.path.abspath(filepath)
         try:
             subprocess.Popen(["open", filepath])

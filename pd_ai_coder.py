@@ -201,7 +201,7 @@ class PdAICoder:
                 success(f"✅ パッチ保存: {self.patch_path}")
                 info(summarize_patch(patch_content))
 
-                # Open in Plugdata/Pd (new tab each time)
+                # Open in plugdata/Pd (new tab each time)
                 self.opener.open_patch(self.patch_path)
                 success("🔊 パッチを開きました（古いタブは手動で閉じてください）")
                 return True
