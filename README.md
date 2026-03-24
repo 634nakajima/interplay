@@ -2,154 +2,166 @@
 
 **AI-powered Pure Data patch development tool**
 
-自然言語でPure Dataのパッチを対話的に生成・修正できるCLIツールです。
-Claude APIを使ってパッチを生成し、Pdで開いて手動微調整、さらにAIに追加修正を指示、というサイクルで開発できます。
+自然言語でPure Data（plugdata）のパッチを対話的に生成・修正できるデスクトップアプリです。
+Claude Code CLIをバックエンドとして使用し、パッチ生成→plugdataで自動表示→手動微調整→AIに追加修正指示、というサイクルで開発できます。
 
 ## ワークフロー
 
 ```
-自然言語で指示 → AIがパッチ生成 → Pdで自動表示
+自然言語で指示 → AIがパッチ生成 → plugdataで自動表示
   ↑                                    ↓
-  ← 「ここを変えて」 ←← Pdで手動微調整して保存
+  ← 「ここを変えて」 ←← plugdataで手動微調整して保存
 ```
+
+## 機能
+
+- **対話的パッチ生成**: 自然言語でPdパッチを生成・修正
+- **手動編集の検知**: plugdataで手動編集→保存すると、AIが編集後の状態を理解して追加修正可能
+- **既存パッチの読み込み**: 既存の.pdファイルを開いてAIに修正を依頼
+- **セッション維持**: アプリ起動中は会話の文脈を保持
+- **Serial/OSC変換**: micro:bitなどのデバイスからのシリアル入力をOSCメッセージに変換（内蔵）
+- **micro:bit連携**: 授業で使用するセンサ値（明るさ、加速度、音、アナログ入力）に対応したパッチ生成
+- **ELSE/plugdata対応**: `else/out~`、`else/imp~`、`cyclone/scale`など、ELSEライブラリのオブジェクトを活用
 
 ## セットアップ
 
-### 1. 依存パッケージのインストール
+### 必要なもの
 
-```bash
-pip install anthropic prompt_toolkit
-```
+- **plugdata**（または Pure Data + ELSE ライブラリ）
+- **Claude Code CLI**（`npm install -g @anthropic-ai/claude-code`）
+- Claudeアカウント（無料プランでも利用可能）
 
-### 2. API キーの設定
+### インストール
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### 3. Pure Data の準備（FUDI接続を使う場合）
-
-1. Pure Data を起動
-2. `pd-ai-receiver.pd` を開く（FUDIメッセージ受信用）
-3. pd-ai-coder を起動すると自動的に接続
-
-FUDI接続なしでも動作します（パッチはファイルとして保存され、手動でPdで開けます）。
+1. `pd-ai-coder.app.zip` をダウンロードして展開
+2. `pd-ai-coder.app` をダブルクリックで起動
+3. 初回起動時に「Claudeにログイン」→ ブラウザでClaude認証
 
 ## 使い方
 
-### 基本
+### チャットタブ
 
-```bash
-python pd_ai_coder.py
-```
-
-### オプション
-
-```bash
-# パッチファイルのパスを指定
-python pd_ai_coder.py --patch ~/my-project/synth.pd
-
-# FUDI接続なし（ファイルベースのみ）
-python pd_ai_coder.py --no-fudi
-
-# FUDIポートを変更
-python pd_ai_coder.py --port 3002
-```
-
-### 対話例
+パッチの生成・修正は「Chat」タブで行います。
 
 ```
-pd-ai > 440Hzのサイン波を出力するパッチを作って
+あなた: 440Hzのサイン波を出力するパッチを作って
+AI: osc~ 440 → else/out~ のシンプルなパッチを生成...
+    ✅ パッチを保存しました → plugdataで自動表示
 
-📋 説明
-440Hzのサイン波を生成し、スライダーで音量を調整できるパッチです。
+あなた: フィルタのカットオフにLFOをかけて
+AI: 手動編集を検知しました
+    LFOでローパスフィルタのカットオフを変調するよう修正...
 
-✅ パッチ保存: ~/pd-ai-patches/ai-patch.pd
-🔊 Pdでパッチを開きました
-
-pd-ai > フィルタのカットオフにLFOをかけて
-
-📋 説明
-LFO（低周波オシレーター）でローパスフィルタのカットオフ周波数を
-周期的に変化させるように修正しました。
-
-🔧 変更点
-- osc~ 0.5 (LFO) を追加
-- cyclone/scale でLFO出力を200-5000Hzにマッピング
-- lop~ のカットオフ入力に接続
-
-✅ パッチ保存: ~/pd-ai-patches/ai-patch.pd
-🔊 Pdでパッチを開きました
-
-pd-ai > （Pdでパラメータを手動調整して保存）
-pd-ai > もう少しリバーブを深くして
-📝 Pdでの手動編集を検出しました
-...
+あなた: osc~の引数って何？
+AI: osc~ の引数は周波数（Hz）です。osc~ 440 とすると...
+    （質問にはパッチを生成せず説明で回答）
 ```
 
-### コマンド
+### Serial/OSCタブ
 
-| コマンド | 説明 |
-|---------|------|
-| `/help` | ヘルプを表示 |
-| `/status` | 現在の状態を表示 |
-| `/patch` | 現在のパッチ内容を表示 |
-| `/reload` | Pdで保存されたパッチを再読み込み |
-| `/open` | Pdでパッチを開き直す |
-| `/save <name>` | パッチを別名で保存 |
-| `/load <file>` | 別のパッチファイルを読み込む |
-| `/reset` | 会話履歴をリセット |
-| `/quit` | 終了 |
+micro:bitなどのデバイスとの接続は「Serial/OSC」タブで行います。
+
+1. デバイスをUSB接続
+2. ポートを選択して「接続」
+3. OSC送信先を設定（デフォルト: 127.0.0.1:8000）
+4. デバイスからのシリアルデータが自動的にOSCメッセージに変換されます
+
+### micro:bit連携
+
+micro:bitのセンサ値をPdで受け取るパッチも自然言語で生成できます。
+
+```
+あなた: マイクロビットからの明るさセンサの値に応じて周波数が変化するパッチを作って
+AI: /brightness をOSCで受信し、cyclone/scale で周波数にマッピング...
+```
+
+対応しているOSCアドレス:
+- `/brightness` - 明るさセンサ（0-255）
+- `/accX`, `/accY`, `/accZ` - 加速度センサ
+- `/sound` - 音センサ
+- `/p0` - P0端子のアナログ値（0-1023）
+
+MakeCodeプロジェクト: https://makecode.microbit.org/S19392-01978-77199-41699
 
 ## アーキテクチャ
 
 ```
-┌─────────────────────────────────────┐
-│  pd_ai_coder.py (CLI)              │
-│  ┌──────────┐  ┌───────────────┐   │
-│  │Claude API│  │ pd_file.py    │   │
-│  │ (生成)   │  │ (読み書き)    │   │
-│  └──────────┘  └───────┬───────┘   │
-│       │               │            │
-│       ▼          .pd file          │
-│  ┌──────────┐    ↕ (保存/読込)     │
-│  │ fudi.py  │         │            │
-│  │ (TCP)    ├─── FUDI open ──┐     │
-│  └──────────┘         │      │     │
-└───────────────────────┼──────┼─────┘
-                        │      │
-                        ▼      ▼
-              ┌─────────────────────┐
-              │   Pure Data         │
-              │   - パッチ表示       │
-              │   - 手動編集         │
-              │   - 音声出力         │
-              └─────────────────────┘
+┌─ pd-ai-coder.app ──────────────────────────┐
+│                                              │
+│  Electron (React + TypeScript)               │
+│  ┌────────────┐  ┌─────────────────────┐     │
+│  │ Chat UI    │  │ Serial/OSC Panel    │     │
+│  └─────┬──────┘  └──────┬──────────────┘     │
+│        │                │                    │
+│  ┌─────▼──────┐  ┌──────▼──────────────┐     │
+│  │Claude Code │  │ serialport + osc-js │     │
+│  │  CLI       │  │ (シリアル→OSC変換)    │     │
+│  └─────┬──────┘  └──────┬──────────────┘     │
+│        │                │                    │
+│   .pd file 保存     UDP OSC送信              │
+│        │                │                    │
+└────────┼────────────────┼────────────────────┘
+         │                │
+    open コマンド          │
+         ▼                ▼
+┌──────────────┐  ┌──────────────────┐
+│  plugdata    │  │  Pdパッチ内の     │
+│  パッチ表示   │  │  OSC受信          │
+│  手動編集     │  │  (oscreceive等)   │
+│  音声出力     │  │                  │
+└──────────────┘  └──────────────────┘
 ```
 
 ## ファイル構成
 
 ```
 pd-ai-coder/
-├── pd_ai_coder.py      # メインCLI
-├── pd_file.py           # .pdファイル読み書き・パース
-├── fudi.py              # FUDI TCPクライアント
-├── prompts.py           # AIシステムプロンプト
-├── pd-ai-receiver.pd    # Pd側レシーバーパッチ
-├── requirements.txt     # 依存パッケージ
-└── README.md            # このファイル
+├── pd-ai-coder-app/         # Electron アプリ（メイン）
+│   ├── src/
+│   │   ├── main/            # メインプロセス
+│   │   │   ├── index.ts     # IPCハンドラー
+│   │   │   ├── ai-service.ts    # Claude Code CLI連携
+│   │   │   ├── pd-file.ts       # .pdファイル読み書き
+│   │   │   ├── serial-osc.ts    # シリアル→OSC変換
+│   │   │   └── system-prompt.ts  # AIシステムプロンプト
+│   │   ├── preload/         # IPC ブリッジ
+│   │   └── renderer/        # React UI
+│   │       ├── App.tsx
+│   │       ├── ChatView.tsx
+│   │       ├── SerialOSCPanel.tsx
+│   │       └── ...
+│   └── package.json
+├── docs/                    # GitHub Pages サイト
+│   └── index.html
+├── pd_ai_coder.py           # Python CLI版（レガシー）
+├── pd_file.py
+├── fudi.py
+├── prompts.py
+├── pd-ai-receiver.pd        # FUDI受信用Pdパッチ（将来用）
+└── README.md
 ```
 
-## 今後の拡張予定
+## 開発
 
-- [ ] FUDI動的パッチング（オブジェクトがリアルタイムに出現する体験）
-- [ ] パッチのバージョン管理（undo/redo）
-- [ ] 音響プレビュー用のテストトーン送信
-- [ ] パッチテンプレート機能
-- [ ] SuperCollider対応
+### Python CLI版（レガシー）
+
+```bash
+pip install prompt_toolkit
+python pd_ai_coder.py
+```
+
+### Electron版
+
+```bash
+cd pd-ai-coder-app
+npm install
+npm run dev     # 開発モード
+npm run build   # ビルド（release/ にパッケージ生成）
+```
 
 ## 必要環境
 
-- Python 3.11+
-- Pure Data（Pd-L2Ork または Pd + ELSE ライブラリ推奨）
-- Anthropic API キー
+- macOS（現在の対応OS）
+- plugdata または Pure Data + ELSE ライブラリ
+- Claude Code CLI
+- Claudeアカウント（無料プラン可）
