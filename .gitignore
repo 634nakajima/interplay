@@ -4,9 +4,9 @@ __pycache__/
 *.pyo
 
 # Electron app
-pd-ai-coder-app/node_modules/
-pd-ai-coder-app/dist/
-pd-ai-coder-app/release/
+interplay-app/node_modules/
+interplay-app/dist/
+interplay-app/release/
 
 # OS
 .DS_Store

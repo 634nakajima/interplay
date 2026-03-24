@@ -1,4 +1,4 @@
-# pd-ai-coder
+# Interplay
 
 **AI-powered Pure Data patch development tool**
 
@@ -28,13 +28,12 @@ Claude Code CLIをバックエンドとして使用し、パッチ生成→plugd
 ### 必要なもの
 
 - **plugdata**（または Pure Data + ELSE ライブラリ）
-- **Claude Code CLI**（`npm install -g @anthropic-ai/claude-code`）
 - Claudeアカウント（無料プランでも利用可能）
 
 ### インストール
 
-1. `pd-ai-coder.app.zip` をダウンロードして展開
-2. `pd-ai-coder.app` をダブルクリックで起動
+1. `Interplay.app.zip` をダウンロードして展開
+2. `Interplay.app` をダブルクリックで起動
 3. 初回起動時に「Claudeにログイン」→ ブラウザでClaude認証
 
 ## 使い方
@@ -86,21 +85,21 @@ MakeCodeプロジェクト: https://makecode.microbit.org/S19392-01978-77199-416
 ## アーキテクチャ
 
 ```
-┌─ pd-ai-coder.app ──────────────────────────┐
-│                                              │
-│  Electron (React + TypeScript)               │
-│  ┌────────────┐  ┌─────────────────────┐     │
-│  │ Chat UI    │  │ Serial/OSC Panel    │     │
-│  └─────┬──────┘  └──────┬──────────────┘     │
-│        │                │                    │
-│  ┌─────▼──────┐  ┌──────▼──────────────┐     │
-│  │Claude Code │  │ serialport + osc-js │     │
-│  │  CLI       │  │ (シリアル→OSC変換)    │     │
-│  └─────┬──────┘  └──────┬──────────────┘     │
-│        │                │                    │
-│   .pd file 保存     UDP OSC送信              │
-│        │                │                    │
-└────────┼────────────────┼────────────────────┘
+┌─ Interplay.app ───────────────────────────┐
+│                                            │
+│  Electron (React + TypeScript)             │
+│  ┌────────────┐  ┌─────────────────────┐   │
+│  │ Chat UI    │  │ Serial/OSC Panel    │   │
+│  └─────┬──────┘  └──────┬──────────────┘   │
+│        │                │                  │
+│  ┌─────▼──────┐  ┌──────▼──────────────┐   │
+│  │Claude Code │  │ serialport + osc-js │   │
+│  │  CLI       │  │ (シリアル→OSC変換)    │   │
+│  └─────┬──────┘  └──────┬──────────────┘   │
+│        │                │                  │
+│   .pd file 保存     UDP OSC送信            │
+│        │                │                  │
+└────────┼────────────────┼──────────────────┘
          │                │
     open コマンド          │
          ▼                ▼
@@ -115,33 +114,40 @@ MakeCodeプロジェクト: https://makecode.microbit.org/S19392-01978-77199-416
 ## ファイル構成
 
 ```
-pd-ai-coder/
-├── pd-ai-coder-app/         # Electron アプリ（メイン）
+interplay/
+├── interplay-app/          # Electron アプリ（メイン）
 │   ├── src/
-│   │   ├── main/            # メインプロセス
-│   │   │   ├── index.ts     # IPCハンドラー
-│   │   │   ├── ai-service.ts    # Claude Code CLI連携
-│   │   │   ├── pd-file.ts       # .pdファイル読み書き
-│   │   │   ├── serial-osc.ts    # シリアル→OSC変換
-│   │   │   └── system-prompt.ts  # AIシステムプロンプト
-│   │   ├── preload/         # IPC ブリッジ
-│   │   └── renderer/        # React UI
+│   │   ├── main/           # メインプロセス
+│   │   │   ├── index.ts        # IPCハンドラー
+│   │   │   ├── ai-service.ts   # Claude Code CLI連携
+│   │   │   ├── pd-file.ts      # .pdファイル読み書き
+│   │   │   ├── serial-osc.ts   # シリアル→OSC変換
+│   │   │   └── system-prompt.ts # AIシステムプロンプト
+│   │   ├── preload/        # IPC ブリッジ
+│   │   └── renderer/       # React UI
 │   │       ├── App.tsx
 │   │       ├── ChatView.tsx
 │   │       ├── SerialOSCPanel.tsx
 │   │       └── ...
 │   └── package.json
-├── docs/                    # GitHub Pages サイト
+├── docs/                   # GitHub Pages サイト
 │   └── index.html
-├── pd_ai_coder.py           # Python CLI版（レガシー）
-├── pd_file.py
-├── fudi.py
-├── prompts.py
+├── pd_ai_coder.py          # Python CLI版（レガシー）
+├── prompts.py               # システムプロンプト（Python版）
 ├── pd-ai-receiver.pd        # FUDI受信用Pdパッチ（将来用）
 └── README.md
 ```
 
 ## 開発
+
+### Electron版
+
+```bash
+cd interplay-app
+npm install
+npm run dev     # 開発モード
+npm run build:mac   # macOSビルド（release/ にパッケージ生成）
+```
 
 ### Python CLI版（レガシー）
 
@@ -150,18 +156,8 @@ pip install prompt_toolkit
 python pd_ai_coder.py
 ```
 
-### Electron版
-
-```bash
-cd pd-ai-coder-app
-npm install
-npm run dev     # 開発モード
-npm run build   # ビルド（release/ にパッケージ生成）
-```
-
 ## 必要環境
 
 - macOS（現在の対応OS）
 - plugdata または Pure Data + ELSE ライブラリ
-- Claude Code CLI
 - Claudeアカウント（無料プラン可）

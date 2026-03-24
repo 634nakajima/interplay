@@ -1,5 +1,5 @@
-appId: com.pd-ai-coder.app
-productName: pd-ai-coder
+appId: com.interplay.app
+productName: Interplay
 directories:
   output: release
 mac:

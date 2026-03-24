@@ -30,7 +30,7 @@ function createWindow() {
     height: 700,
     minWidth: 500,
     minHeight: 400,
-    title: "pd-ai-coder",
+    title: "Interplay",
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,

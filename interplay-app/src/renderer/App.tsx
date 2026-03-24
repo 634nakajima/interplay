@@ -120,7 +120,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>pd-ai-coder</h1>
+        <h1>Interplay</h1>
         <div className="header-tabs">
           <button
             className={`tab-btn ${activeTab === "chat" ? "active" : ""}`}
