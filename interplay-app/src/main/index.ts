@@ -96,9 +96,10 @@ function buildUserMessage(userInput: string): string {
 
 async function chooseSavePath(): Promise<string | null> {
   if (!mainWindow) return null;
+  const defaultDir = patchPath ? path.dirname(patchPath) : os.homedir() + "/Desktop";
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "パッチの保存先を選択",
-    defaultPath: path.join(os.homedir(), "Desktop", "ai-patch.pd"),
+    defaultPath: path.join(defaultDir, "ai-patch.pd"),
     filters: [{ name: "Pure Data Patch", extensions: ["pd"] }],
   });
   if (result.canceled || !result.filePath) return null;
@@ -107,9 +108,10 @@ async function chooseSavePath(): Promise<string | null> {
 
 async function chooseP5SketchPath(): Promise<string | null> {
   if (!mainWindow) return null;
+  const defaultDir = p5SketchPath ? path.dirname(p5SketchPath) : (patchPath ? path.dirname(patchPath) : os.homedir() + "/Desktop");
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "p5.jsスケッチの保存先を選択",
-    defaultPath: path.join(os.homedir(), "Desktop", "ai-sketch.html"),
+    defaultPath: path.join(defaultDir, "ai-sketch.html"),
     filters: [{ name: "HTML", extensions: ["html"] }],
   });
   if (result.canceled || !result.filePath) return null;
