@@ -2,19 +2,74 @@ import fs from "fs";
 import path from "path";
 
 /**
+ * OSC WebSocket helper script embedded in every p5.js sketch HTML.
+ * Provides setupOSC(), parseOSC(), sendOSC(), and oscData object.
+ * Sketches only need to call setupOSC(port) and read oscData['/address'].
+ */
+const OSC_HELPER = `
+// --- Interplay OSC Helper (auto-injected) ---
+var oscWs = null;
+var oscData = {};
+
+function setupOSC(port) {
+  port = port || 7401;
+  oscWs = new WebSocket('ws://localhost:' + port);
+  oscWs.binaryType = 'arraybuffer';
+  oscWs.onmessage = function(e) {
+    var parsed = parseOSC(e.data);
+    if (parsed) oscData[parsed.address] = parsed.value;
+  };
+}
+
+function parseOSC(buf) {
+  var view = new DataView(buf);
+  var i = 0;
+  var addrEnd = i;
+  while (addrEnd < view.byteLength && view.getUint8(addrEnd) !== 0) addrEnd++;
+  var address = String.fromCharCode.apply(null, new Uint8Array(buf, i, addrEnd - i));
+  i = addrEnd;
+  i += 4 - (i % 4);
+  if (i >= view.byteLength || view.getUint8(i) !== 44) return null;
+  i++;
+  var type = String.fromCharCode(view.getUint8(i));
+  i++;
+  i += 4 - (i % 4);
+  var value = 0;
+  if (type === 'f' && i + 4 <= view.byteLength) {
+    value = view.getFloat32(i);
+  } else if (type === 'i' && i + 4 <= view.byteLength) {
+    value = view.getInt32(i);
+  }
+  return { address: address, value: value };
+}
+
+function sendOSC(address, value) {
+  if (!oscWs || oscWs.readyState !== 1) return;
+  var addrBytes = new TextEncoder().encode(address);
+  var addrLen = addrBytes.length + 1;
+  addrLen += (4 - (addrLen % 4)) % 4;
+  var tagLen = 4;
+  var buf = new ArrayBuffer(addrLen + tagLen + 4);
+  var u8 = new Uint8Array(buf);
+  u8.set(addrBytes, 0);
+  u8[addrLen] = 44;
+  u8[addrLen + 1] = 102;
+  new DataView(buf).setFloat32(addrLen + tagLen, value);
+  oscWs.send(buf);
+}
+// --- end Interplay OSC Helper ---
+`;
+
+/**
  * HTML template that wraps p5.js sketch code.
- * Uses CDN for p5.js, sets up full-window canvas.
+ * Includes OSC helper and optionally p5.sound.
  */
 function wrapInHtml(sketchCode: string): string {
-  // Detect which extra libraries are needed
   const libs = ['<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>'];
 
-  if (sketchCode.includes("p5.FFT") || sketchCode.includes("p5.AudioIn") || sketchCode.includes("p5.SoundFile") || sketchCode.includes("getAudioContext") || sketchCode.includes("userStartAudio")) {
+  if (sketchCode.includes("p5.FFT") || sketchCode.includes("p5.AudioIn") || sketchCode.includes("p5.SoundFile") || sketchCode.includes("getAudioContext") || sketchCode.includes("userStartAudio") || sketchCode.includes("loadSound")) {
     libs.push('<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/addons/p5.sound.min.js"></script>');
   }
-
-  // osc-js CDN is no longer used — sketches use WebSocket direct connection
-  // with built-in OSC parser (see system prompt for helper functions)
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -29,6 +84,7 @@ ${libs.join("\n")}
 </head>
 <body>
 <script>
+${OSC_HELPER}
 ${sketchCode}
 </script>
 </body>
@@ -52,6 +108,19 @@ function cleanSketchCode(raw: string): string | null {
   if (scriptMatch) {
     text = scriptMatch[1].trim();
   }
+
+  // Remove duplicate OSC helper if AI included it
+  text = text.replace(/\/\/\s*---\s*(?:Interplay\s+)?OSC.*?Helper[\s\S]*?\/\/\s*---\s*end.*?---\s*\n?/g, "");
+  // Also remove individual helper function definitions that overlap with pre-injected ones
+  text = text.replace(/function\s+setupOSC\s*\([^)]*\)\s*\{[\s\S]*?\n\}\s*\n?/g, "");
+  text = text.replace(/function\s+parseOSC\s*\([^)]*\)\s*\{[\s\S]*?\n\}\s*\n?/g, "");
+  text = text.replace(/function\s+sendOSC\s*\([^)]*\)\s*\{[\s\S]*?\n\}\s*\n?/g, "");
+  text = text.replace(/var\s+oscWs\s*=\s*null;\s*\n?/g, "");
+  text = text.replace(/var\s+oscData\s*=\s*\{\};\s*\n?/g, "");
+  text = text.replace(/let\s+oscWs\s*=\s*null;\s*\n?/g, "");
+  text = text.replace(/let\s+oscData\s*=\s*\{\};\s*\n?/g, "");
+
+  text = text.trim();
 
   // Split and filter: stop at markdown content
   const lines = text.split("\n");
@@ -133,6 +202,28 @@ export function writeP5Sketch(filepath: string, content: string): boolean {
 }
 
 /**
+ * Read p5.js sketch code from HTML file (extract JS between script tags).
+ */
+export function readP5SketchCode(filepath: string): string | null {
+  try {
+    const html = fs.readFileSync(filepath, "utf-8");
+    const match = html.match(/<script>\s*\n?([\s\S]*?)\s*<\/script>\s*<\/body>/);
+    if (match) {
+      // Remove the OSC helper portion to return only user sketch code
+      let code = match[1].trim();
+      const helperEnd = code.indexOf("// --- end Interplay OSC Helper ---");
+      if (helperEnd !== -1) {
+        code = code.substring(helperEnd + "// --- end Interplay OSC Helper ---".length).trim();
+      }
+      return code || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Summarize a p5.js sketch for display in the UI.
  */
 export function summarizeP5Sketch(content: string): string {
@@ -149,6 +240,7 @@ export function summarizeP5Sketch(content: string): string {
   if (content.includes("random(")) features.push("ランダム");
   if (content.includes("sin(") || content.includes("cos(")) features.push("三角関数");
   if (content.includes("FFT") || content.includes("p5.sound")) features.push("音声解析");
+  if (content.includes("setupOSC") || content.includes("oscData")) features.push("OSC連携");
 
   const lines = content.trim().split("\n").length;
 
