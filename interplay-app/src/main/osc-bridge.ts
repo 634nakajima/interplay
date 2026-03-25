@@ -2,32 +2,38 @@ import dgram from "dgram";
 import { WebSocketServer, WebSocket } from "ws";
 
 /**
- * OSC Bridge: receives UDP OSC from Pd and forwards to p5.js via WebSocket.
+ * Bidirectional OSC Bridge between Pd (UDP) and p5.js (WebSocket).
  *
- * Pd (UDP, port 7400) → Bridge → WebSocket (port 7401) → p5.js browser
+ * Pd (UDP, port 7400) → Bridge → WebSocket (port 7401) → p5.js
+ * p5.js (WebSocket) → Bridge → UDP (port 8000) → Pd
  */
 
 interface BridgeState {
   udpSocket: dgram.Socket | null;
+  udpSendSocket: dgram.Socket | null;
   wsServer: WebSocketServer | null;
   wsClients: Set<WebSocket>;
   udpPort: number;
   wsPort: number;
+  pdReceivePort: number;
   running: boolean;
 }
 
 const state: BridgeState = {
   udpSocket: null,
+  udpSendSocket: null,
   wsServer: null,
   wsClients: new Set(),
   udpPort: 7400,
   wsPort: 7401,
+  pdReceivePort: 8000,
   running: false,
 };
 
 export function startOSCBridge(
   udpPort = 7400,
-  wsPort = 7401
+  wsPort = 7401,
+  pdReceivePort = 8000
 ): { success: boolean; error?: string } {
   if (state.running) {
     stopOSCBridge();
@@ -36,6 +42,10 @@ export function startOSCBridge(
   try {
     state.udpPort = udpPort;
     state.wsPort = wsPort;
+    state.pdReceivePort = pdReceivePort;
+
+    // UDP socket for sending messages TO Pd (p5.js → Pd direction)
+    state.udpSendSocket = dgram.createSocket("udp4");
 
     // UDP server: receive OSC from Pd
     state.udpSocket = dgram.createSocket("udp4");
@@ -66,6 +76,23 @@ export function startOSCBridge(
         `[OSC Bridge] WebSocket client connected (total: ${state.wsClients.size})`
       );
 
+      // p5.js → Pd: forward WebSocket messages to UDP
+      ws.on("message", (data) => {
+        if (state.udpSendSocket) {
+          const buf = Buffer.from(data as ArrayBuffer);
+          state.udpSendSocket.send(
+            buf,
+            state.pdReceivePort,
+            "127.0.0.1",
+            (err) => {
+              if (err) {
+                console.error("[OSC Bridge] UDP send error:", err.message);
+              }
+            }
+          );
+        }
+      });
+
       ws.on("close", () => {
         state.wsClients.delete(ws);
         console.log(
@@ -80,7 +107,7 @@ export function startOSCBridge(
 
     state.running = true;
     console.log(
-      `[OSC Bridge] Started: UDP ${udpPort} → WebSocket ${wsPort}`
+      `[OSC Bridge] Started: Pd UDP ${udpPort} ↔ WebSocket ${wsPort} ↔ Pd UDP ${pdReceivePort}`
     );
     return { success: true };
   } catch (e: any) {
@@ -93,6 +120,11 @@ export function stopOSCBridge(): void {
   if (state.udpSocket) {
     state.udpSocket.close();
     state.udpSocket = null;
+  }
+
+  if (state.udpSendSocket) {
+    state.udpSendSocket.close();
+    state.udpSendSocket = null;
   }
 
   for (const client of state.wsClients) {
