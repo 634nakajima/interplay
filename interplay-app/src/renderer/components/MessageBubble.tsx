@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import type { Message } from "../App";
 
 interface Props {
@@ -24,30 +25,34 @@ export default function MessageBubble({ message }: Props) {
 
   return (
     <div className="message assistant">
-      <div className="bubble">
+      <div className="bubble markdown-body">
         {message.description && (
-          <div className="description">{message.description}</div>
+          <div className="description">
+            <ReactMarkdown>{message.description}</ReactMarkdown>
+          </div>
         )}
         {message.tips && (
           <div className="tips">
             <strong>カスタマイズのヒント:</strong>
-            <pre>{message.tips}</pre>
+            <ReactMarkdown>{message.tips}</ReactMarkdown>
           </div>
         )}
         {message.changes && (
           <div className="changes">
             <strong>変更点:</strong>
-            <pre>{message.changes}</pre>
+            <ReactMarkdown>{message.changes}</ReactMarkdown>
           </div>
         )}
         {message.suggestions && (
           <div className="suggestions">
             <strong>次のステップ:</strong>
-            <pre>{message.suggestions}</pre>
+            <ReactMarkdown>{message.suggestions}</ReactMarkdown>
           </div>
         )}
         {message.rawResponse && (
-          <div className="raw-response">{message.rawResponse}</div>
+          <div className="raw-response">
+            <ReactMarkdown>{message.rawResponse}</ReactMarkdown>
+          </div>
         )}
       </div>
     </div>

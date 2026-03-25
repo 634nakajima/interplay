@@ -249,10 +249,21 @@ body {
   font-size: 13px;
 }
 
-.changes pre {
-  margin-top: 4px;
-  white-space: pre-wrap;
+.changes ul, .changes ol {
+  margin: 4px 0 0 16px;
   color: var(--text-secondary);
+}
+
+.changes p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+}
+
+.changes code {
+  background: rgba(0,0,0,0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
 }
 
 .patch-info {
@@ -289,11 +300,23 @@ body {
   font-size: 12px;
 }
 
-.tips pre {
-  margin-top: 4px;
+.tips ul, .tips ol {
+  margin: 4px 0 0 16px;
   font-size: 12px;
   color: #5a4a2a;
-  white-space: pre-wrap;
+}
+
+.tips p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #5a4a2a;
+}
+
+.tips code {
+  background: rgba(0,0,0,0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
 }
 
 .suggestions {
@@ -310,15 +333,70 @@ body {
   font-size: 12px;
 }
 
-.suggestions pre {
-  margin-top: 4px;
+.suggestions ul, .suggestions ol {
+  margin: 4px 0 0 16px;
   font-size: 12px;
   color: #2a4a50;
-  white-space: pre-wrap;
+}
+
+.suggestions p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #2a4a50;
+}
+
+.suggestions code {
+  background: rgba(0,0,0,0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
 }
 
 .raw-response {
-  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.raw-response p {
+  margin: 0 0 8px;
+}
+
+.raw-response p:last-child {
+  margin-bottom: 0;
+}
+
+.raw-response ul, .raw-response ol {
+  margin: 4px 0 8px 16px;
+}
+
+.raw-response code {
+  background: rgba(0,0,0,0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.raw-response pre {
+  background: rgba(0,0,0,0.04);
+  padding: 8px 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.raw-response pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body strong {
+  font-weight: 600;
+}
+
+.markdown-body h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 8px 0 4px;
 }
 
 /* Input Area */
