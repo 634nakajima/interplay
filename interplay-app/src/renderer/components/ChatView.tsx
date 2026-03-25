@@ -49,16 +49,19 @@ export default function ChatView({ messages, loading, onSend, onCancel }: Props)
       <div className="messages">
         {messages.length === 0 && (
           <div className="empty-state">
-            <p>自然言語でPdパッチの作成・修正を指示できます</p>
+            <p>自然言語で音響パッチや映像スケッチの作成・修正を指示できます</p>
             <div className="examples">
-              <button onClick={() => onSend("440Hzのサイン波パッチを作って")}>
-                440Hzのサイン波パッチを作って
+              <button onClick={() => onSend("ノイズが動くジェネラティブビジュアルを作って")}>
+                ジェネラティブビジュアル
+              </button>
+              <button onClick={() => onSend("音に反応するパーティクルの映像を作って")}>
+                音と映像の連携
               </button>
               <button onClick={() => onSend("FM合成で金属的なベルの音を作りたい")}>
-                FM合成で金属的なベルの音を作りたい
+                FM合成サウンド
               </button>
-              <button onClick={() => onSend("マイクロビットの明るさセンサで周波数を変えるパッチ")}>
-                micro:bit連携パッチ
+              <button onClick={() => onSend("マイクロビットの加速度センサで音と映像を制御したい")}>
+                micro:bit連携
               </button>
             </div>
           </div>
