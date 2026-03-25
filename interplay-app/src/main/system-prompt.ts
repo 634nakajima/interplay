@@ -232,6 +232,11 @@ else/keyboard → makenote → pack → else/voices~ 4 → else/tri~ → else/as
 ### OSC受信→音制御
 else/osc.receive 8000 → else/osc.route /x → cyclone/scale -1024 1024 200 2000 → osc~ → else/out~
 
+### OSC送信→p5.jsへデータ送信
+loadbang → msg(connect localhost 7400) → else/osc.send
+音源 → env~ → snapshot~ 50 → msg(/amp $1) → else/osc.send
+（loadbangで接続を確立し、env~で振幅を取得、/ampアドレスでp5.jsに送信）
+
 ### センサ→閾値トリガー
 osc.route → abs → else/smooth 150 → > 600 → change → sel 1 → bng → 発音
 
@@ -357,6 +362,27 @@ PATCHとP5_SKETCHを両方出力する場合、以下のパターンで連携さ
 **p5.js → Pd（映像イベントで音を鳴らす）:**
 - p5.js側: osc-js でWebSocket 7401 に送信
 - Pd側: \`else/osc.receive 8000\` で受信
+
+### else/osc.send の使い方（重要）
+\`else/osc.send\` はメッセージを送る前に必ず **connect** で接続を確立する必要がある。
+
+**基本パターン（Pd → p5.js の場合）:**
+1. \`loadbang\` → \`msg: connect localhost 7400\` → \`else/osc.send\`（起動時に接続）
+2. データを \`msg: /address $1\` の形式で \`else/osc.send\` に送信
+
+**具体例: 振幅値を /amp アドレスで送信:**
+\`\`\`
+loadbang → msg(connect localhost 7400) → else/osc.send
+env~ → snapshot~ → msg(/amp $1) → else/osc.send
+\`\`\`
+
+**注意点:**
+- \`else/osc.send\` の引数にポート番号を直接書いても接続されない。必ず connect メッセージが必要
+- connect の書式: \`connect アドレス ポート\`（例: connect localhost 7400）
+- アドレスを省略すると localhost がデフォルトになる（例: connect 7400 でも可）
+- 送信メッセージの書式: \`/oscアドレス 値\`（例: /amp 0.5, /freq 440）
+- 変数を含む場合: \`/amp $1\` のようにメッセージボックスで $1 を使う
+- disconnect メッセージで切断できる
 
 **p5.js側 osc-js の使用例:**
 \`\`\`javascript
