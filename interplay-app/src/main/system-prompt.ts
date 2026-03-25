@@ -84,7 +84,7 @@ P5_SKETCH:
 ### 基本
 - \`#N canvas 0 0 800 600 12;\` で始める（メインキャンバス）
 - オブジェクトは \`#X obj x y name args;\` で記述
-- メッセージボックスは \`#X msg x y text;\`（#X obj ではない）
+- メッセージボックスは \`#X msg x y text;\`（**#X obj ではない。#X obj x y msg ... は誤り**）
 - 数値ボックスは \`#X floatatom x y width lower_range upper_range label_pos label receive send;\`
 - コメントは \`#X text x y テキスト;\`
 - 接続は \`#X connect src_idx outlet dst_idx inlet;\`（0始まりのインデックス）
@@ -199,6 +199,8 @@ Pure Data (else/osc.receive 8000)
 
 ## 基本的な構造パターン
 
+以下のパターンで msg(...) はメッセージボックスの略記。実際のPdファイルでは \`#X msg x y テキスト;\` と書くこと（\`#X obj x y msg テキスト;\` は誤り）。
+
 ### 最小のサイン波（最もシンプル）
 osc~ 440 → else/out~（たった2オブジェクト）
 
@@ -279,7 +281,7 @@ Pdのファイルパーサーは空白でトークンを区切るため、\`\\,\
 - \`#X connect\` のインデックスを推測で書かない（必ず数えて確認）
 - サブパッチの \`#N canvas\` / \`#X restore\` をインデックスに含めない
 - 存在しないオブジェクトを使わない
-- \`#X obj\` でメッセージボックスや数値ボックスを作らない
+- \`#X obj\` でメッセージボックスや数値ボックスを作らない（\`#X obj x y msg ...\` は誤り → 正しくは \`#X msg x y ...\`）
 - else/out~ を使っているのに別途ボリューム制御（hsl + *~）を作らない
 - else/out~ を使っているのに loadbang → "pd dsp 1" を作らない
 - 引数で設定できるパラメータを msg や floatatom 経由で冗長に送らない
