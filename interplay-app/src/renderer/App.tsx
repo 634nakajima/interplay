@@ -109,11 +109,12 @@ export default function App() {
     const result = await window.api.loadPatch();
     if (result.loaded) {
       window.api.getStatus().then(setStatus);
+      const label = result.type === "p5" ? "p5.jsスケッチ" : "Pdパッチ";
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          description: `パッチを読み込みました: ${result.path}\n${result.summary || ""}`,
+          description: `${label}を読み込みました: ${result.path}\n${result.summary || ""}`,
         },
       ]);
     }

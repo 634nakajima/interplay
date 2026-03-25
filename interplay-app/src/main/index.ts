@@ -56,6 +56,16 @@ function createWindow() {
   }
 }
 
+function readP5SketchCode(filepath: string): string | null {
+  try {
+    const html = fs.readFileSync(filepath, "utf-8");
+    const match = html.match(/<script>\s*\n([\s\S]*?)\n\s*<\/script>/);
+    return match ? match[1].trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 function buildUserMessage(userInput: string): string {
   const parts = [userInput];
   if (patchPath) {
@@ -68,7 +78,15 @@ function buildUserMessage(userInput: string): string {
       }
       if (mtime) lastPatchMtime = mtime;
       parts.push(
-        `\n\n--- 現在のパッチ (${path.basename(patchPath)}) ---\n${content}`
+        `\n\n--- 現在のPdパッチ (${path.basename(patchPath)}) ---\n${content}`
+      );
+    }
+  }
+  if (p5SketchPath) {
+    const code = readP5SketchCode(p5SketchPath);
+    if (code) {
+      parts.push(
+        `\n\n--- 現在のp5.jsスケッチ (${path.basename(p5SketchPath)}) ---\n${code}`
       );
     }
   }
@@ -196,21 +214,42 @@ ipcMain.handle("chat:reset", () => {
 ipcMain.handle("patch:load", async () => {
   if (!mainWindow) return { loaded: false };
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: "パッチファイルを開く",
-    filters: [{ name: "Pure Data Patch", extensions: ["pd"] }],
+    title: "ファイルを開く",
+    filters: [
+      { name: "Pd / p5.js", extensions: ["pd", "html"] },
+      { name: "Pure Data Patch", extensions: ["pd"] },
+      { name: "p5.js Sketch", extensions: ["html"] },
+    ],
     properties: ["openFile"],
   });
   if (result.canceled || result.filePaths.length === 0) {
     return { loaded: false };
   }
-  patchPath = result.filePaths[0];
-  lastPatchMtime = getPatchMtime(patchPath);
-  const content = readPatch(patchPath);
-  return {
-    loaded: true,
-    path: patchPath,
-    summary: content ? summarizePatch(content) : null,
-  };
+  const filePath = result.filePaths[0];
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (ext === ".pd") {
+    patchPath = filePath;
+    lastPatchMtime = getPatchMtime(patchPath);
+    const content = readPatch(patchPath);
+    return {
+      loaded: true,
+      path: patchPath,
+      summary: content ? summarizePatch(content) : null,
+      type: "pd",
+    };
+  } else if (ext === ".html") {
+    p5SketchPath = filePath;
+    const code = readP5SketchCode(filePath);
+    return {
+      loaded: true,
+      path: p5SketchPath,
+      summary: code ? summarizeP5Sketch(code) : null,
+      type: "p5",
+    };
+  }
+
+  return { loaded: false };
 });
 
 ipcMain.handle("status:get", () => {
