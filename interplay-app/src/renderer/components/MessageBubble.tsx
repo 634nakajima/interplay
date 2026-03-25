@@ -28,16 +28,22 @@ export default function MessageBubble({ message }: Props) {
         {message.description && (
           <div className="description">{message.description}</div>
         )}
+        {message.tips && (
+          <div className="tips">
+            <strong>カスタマイズのヒント:</strong>
+            <pre>{message.tips}</pre>
+          </div>
+        )}
         {message.changes && (
           <div className="changes">
             <strong>変更点:</strong>
             <pre>{message.changes}</pre>
           </div>
         )}
-        {message.patchInfo && (
-          <div className="patch-info">
-            <span className="patch-saved">パッチを保存・オープンしました</span>
-            <pre className="patch-summary">{message.patchInfo.summary}</pre>
+        {message.suggestions && (
+          <div className="suggestions">
+            <strong>次のステップ:</strong>
+            <pre>{message.suggestions}</pre>
           </div>
         )}
         {message.rawResponse && (

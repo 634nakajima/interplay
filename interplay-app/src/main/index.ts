@@ -9,6 +9,11 @@ import {
   summarizePatch,
   getPatchMtime,
 } from "./pd-file";
+import {
+  extractP5SketchFromResponse,
+  writeP5Sketch,
+  summarizeP5Sketch,
+} from "./p5-file";
 import { openPatchInPd } from "./file-opener";
 import {
   listSerialPorts,
@@ -17,11 +22,17 @@ import {
   getSerialOSCStatus,
   setOSCDestination,
 } from "./serial-osc";
+import {
+  startOSCBridge,
+  stopOSCBridge,
+  getOSCBridgeStatus,
+} from "./osc-bridge";
 import os from "os";
 import fs from "fs";
 
 let patchPath: string | null = null;
 let lastPatchMtime: number | null = null;
+let p5SketchPath: string | null = null;
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
@@ -75,6 +86,17 @@ async function chooseSavePath(): Promise<string | null> {
   return result.filePath;
 }
 
+async function chooseP5SketchPath(): Promise<string | null> {
+  if (!mainWindow) return null;
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "p5.jsスケッチの保存先を選択",
+    defaultPath: path.join(os.homedir(), "Desktop", "ai-sketch.html"),
+    filters: [{ name: "HTML", extensions: ["html"] }],
+  });
+  if (result.canceled || !result.filePath) return null;
+  return result.filePath;
+}
+
 // --- IPC Handlers ---
 
 ipcMain.handle("chat:send", async (event, userInput: string) => {
@@ -114,14 +136,44 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
       }
     }
 
-    const descMatch = response.match(/DESCRIPTION:\s*\n([\s\S]*?)(?=\nCHANGES:|\nPATCH:|$)/);
-    const changesMatch = response.match(/CHANGES:\s*\n([\s\S]*?)(?=\nPATCH:|$)/);
+    // --- p5.js Sketch extraction ---
+    const p5Content = extractP5SketchFromResponse(response);
+    let p5Info = null;
+    if (p5Content) {
+      if (!p5SketchPath) {
+        const chosen = await chooseP5SketchPath();
+        if (!chosen) {
+          p5SketchPath = path.join(os.homedir(), "Desktop", "ai-sketch.html");
+        } else {
+          p5SketchPath = chosen;
+        }
+      }
+
+      if (writeP5Sketch(p5SketchPath, p5Content)) {
+        p5Info = {
+          path: p5SketchPath,
+          summary: summarizeP5Sketch(p5Content),
+        };
+        // Open in browser
+        spawn("open", [p5SketchPath], { stdio: "ignore" });
+      }
+    }
+
+    const descMatch = response.match(/DESCRIPTION:\s*\n([\s\S]*?)(?=\nTIPS:|\nSUGGESTIONS:|\nCHANGES:|\nPATCH:|\nP5_SKETCH:|$)/);
+    const tipsMatch = response.match(/TIPS:\s*\n([\s\S]*?)(?=\nSUGGESTIONS:|\nCHANGES:|\nPATCH:|\nP5_SKETCH:|$)/);
+    const suggestionsMatch = response.match(/SUGGESTIONS:\s*\n([\s\S]*?)(?=\nCHANGES:|\nPATCH:|\nP5_SKETCH:|$)/);
+    const changesMatch = response.match(/CHANGES:\s*\n([\s\S]*?)(?=\nPATCH:|\nP5_SKETCH:|$)/);
+
+    const hasOutput = patchContent || p5Content;
 
     return {
       description: descMatch ? descMatch[1].trim() : "",
+      tips: tipsMatch ? tipsMatch[1].trim() : "",
+      suggestions: suggestionsMatch ? suggestionsMatch[1].trim() : "",
       changes: changesMatch ? changesMatch[1].trim() : "",
       patchInfo,
-      rawResponse: patchContent ? null : response,
+      p5Info,
+      rawResponse: hasOutput ? null : response,
     };
   } catch (err: any) {
     console.error("[main] error:", err.message);
@@ -233,11 +285,31 @@ ipcMain.handle("serial:setDest", (_event, host: string, port: number) => {
   return { ok: true };
 });
 
+// --- OSC Bridge IPC Handlers ---
+
+ipcMain.handle("bridge:start", (_event, udpPort?: number, wsPort?: number) => {
+  return startOSCBridge(udpPort, wsPort);
+});
+
+ipcMain.handle("bridge:stop", () => {
+  stopOSCBridge();
+  return { ok: true };
+});
+
+ipcMain.handle("bridge:status", () => {
+  return getOSCBridgeStatus();
+});
+
 // --- App Lifecycle ---
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  // Auto-start OSC bridge (Pd port 7400 → WebSocket 7401)
+  startOSCBridge(7400, 7401);
+});
 
 app.on("window-all-closed", () => {
+  stopOSCBridge();
   app.quit();
 });
 

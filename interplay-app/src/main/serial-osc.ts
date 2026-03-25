@@ -1,6 +1,7 @@
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 import dgram from 'dgram';
+import { forwardToWebSocket } from './osc-bridge';
 
 // OSC message encoding
 function encodeOSCMessage(address: string, value: number): Buffer {
@@ -89,6 +90,8 @@ export function connectSerial(portPath: string): { success: boolean; error?: str
                 addLog('error', `OSC send error: ${err.message}`);
               }
             });
+            // Also forward to p5.js via WebSocket bridge
+            forwardToWebSocket(oscBuf);
             addLog('osc', `${address} ${value}`);
           } else {
             addLog('error', `Invalid value: ${valueStr}`);

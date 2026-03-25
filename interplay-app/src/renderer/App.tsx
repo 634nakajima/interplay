@@ -21,8 +21,9 @@ declare global {
 export interface Message {
   role: "user" | "assistant";
   description?: string;
+  tips?: string;
   changes?: string;
-  patchInfo?: { path: string; summary: string } | null;
+  suggestions?: string;
   rawResponse?: string | null;
   error?: string;
   text?: string;
@@ -65,8 +66,9 @@ export default function App() {
       const aiMsg: Message = {
         role: "assistant",
         description: result.description,
+        tips: result.tips,
         changes: result.changes,
-        patchInfo: result.patchInfo,
+        suggestions: result.suggestions,
         rawResponse: result.rawResponse,
         error: result.error,
       };
