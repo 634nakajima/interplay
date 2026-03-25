@@ -13,7 +13,15 @@ function wrapInHtml(sketchCode: string): string {
     libs.push('<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/addons/p5.sound.min.js"></script>');
   }
 
-  if (sketchCode.includes("osc-js") || sketchCode.includes("OSC(")) {
+  if (
+    sketchCode.includes("OSC(") ||
+    sketchCode.includes("new OSC") ||
+    sketchCode.includes("osc-js") ||
+    sketchCode.includes("osc.open") ||
+    sketchCode.includes("osc.on(") ||
+    sketchCode.includes("osc.send(") ||
+    sketchCode.includes(".args[")
+  ) {
     libs.push('<script src="https://cdn.jsdelivr.net/npm/osc-js@2.4.4/lib/osc.min.js"></script>');
   }
 

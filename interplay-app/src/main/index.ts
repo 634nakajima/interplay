@@ -15,6 +15,7 @@ import {
   summarizeP5Sketch,
 } from "./p5-file";
 import { openPatchInPd } from "./file-opener";
+import { serveAndOpenP5Sketch } from "./p5-server";
 import {
   listSerialPorts,
   connectSerial,
@@ -172,8 +173,8 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
           path: p5SketchPath,
           summary: summarizeP5Sketch(p5Content),
         };
-        // Open in browser
-        spawn("open", [p5SketchPath], { stdio: "ignore" });
+        // Serve via local HTTP and open in browser
+        serveAndOpenP5Sketch(p5SketchPath);
       }
     }
 
