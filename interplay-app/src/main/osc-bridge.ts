@@ -78,8 +78,8 @@ export function startOSCBridge(
 
       // p5.js → Pd: forward WebSocket messages to UDP
       ws.on("message", (data) => {
+        const buf = Buffer.from(data as ArrayBuffer);
         if (state.udpSendSocket) {
-          const buf = Buffer.from(data as ArrayBuffer);
           state.udpSendSocket.send(
             buf,
             state.pdReceivePort,
