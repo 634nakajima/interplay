@@ -196,9 +196,23 @@ export default function App() {
         </div>
         <div className="header-actions">
           {activeTab === "chat" && (
-            <button className="header-btn" onClick={handleLoadPatch}>
-              開く
-            </button>
+            <>
+              <button
+                className="header-btn"
+                onClick={async () => {
+                  await window.api.resetSession();
+                  setMessages([]);
+                  setP5Code(null);
+                  setP5FilePath(null);
+                  window.api.getStatus().then(setStatus);
+                }}
+              >
+                新規
+              </button>
+              <button className="header-btn" onClick={handleLoadPatch}>
+                開く
+              </button>
+            </>
           )}
         </div>
       </header>
