@@ -3,6 +3,7 @@ import ChatView from "./components/ChatView";
 import StatusBar from "./components/StatusBar";
 import LoginScreen from "./components/LoginScreen";
 import SerialOSCPanel from "./components/SerialOSCPanel";
+import P5EditorPanel from "./components/P5EditorPanel";
 
 declare global {
   interface Window {
@@ -14,6 +15,8 @@ declare global {
       checkAuth: () => Promise<{ loggedIn: boolean }>;
       login: () => Promise<{ success: boolean }>;
       loadPatch: () => Promise<{ loaded: boolean; path?: string; summary?: string }>;
+      p5GetCode: () => Promise<{ code: string | null; filePath: string | null }>;
+      p5SaveCode: (code: string) => Promise<{ ok: boolean; filePath?: string }>;
     };
   }
 }
@@ -36,6 +39,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "serial">("chat");
+  const [p5Code, setP5Code] = useState<string | null>(null);
+  const [p5FilePath, setP5FilePath] = useState<string | null>(null);
 
   useEffect(() => {
     window.api.checkAuth().then((result) => {
@@ -74,6 +79,13 @@ export default function App() {
       };
       setMessages((prev) => [...prev, aiMsg]);
       window.api.getStatus().then(setStatus);
+      // Refresh p5 editor content after AI response
+      window.api.p5GetCode().then((r) => {
+        if (r.code) {
+          setP5Code(r.code);
+          setP5FilePath(r.filePath);
+        }
+      });
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -117,6 +129,15 @@ export default function App() {
           description: `${label}を読み込みました: ${result.path}\n${result.summary || ""}`,
         },
       ]);
+      // If p5 file loaded, update editor
+      if (result.type === "p5") {
+        window.api.p5GetCode().then((r) => {
+          if (r.code) {
+            setP5Code(r.code);
+            setP5FilePath(r.filePath);
+          }
+        });
+      }
     }
   };
 
@@ -150,18 +171,27 @@ export default function App() {
         </div>
       </header>
       {activeTab === "chat" ? (
-        <>
-          <ChatView
-            messages={messages}
-            loading={loading}
-            onSend={handleSend}
-            onCancel={async () => {
-              await window.api.cancelMessage();
-              setLoading(false);
-            }}
-          />
-          <StatusBar status={status} />
-        </>
+        <div className={`main-content ${p5Code ? "has-editor" : ""}`}>
+          <div className="chat-side">
+            <ChatView
+              messages={messages}
+              loading={loading}
+              onSend={handleSend}
+              onCancel={async () => {
+                await window.api.cancelMessage();
+                setLoading(false);
+              }}
+            />
+            <StatusBar status={status} />
+          </div>
+          {p5Code && (
+            <P5EditorPanel
+              code={p5Code}
+              filePath={p5FilePath}
+              onCodeChange={(newCode) => setP5Code(newCode)}
+            />
+          )}
+        </div>
       ) : (
         <SerialOSCPanel />
       )}

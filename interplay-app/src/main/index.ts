@@ -38,9 +38,9 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
+    width: 900,
     height: 700,
-    minWidth: 500,
+    minWidth: 600,
     minHeight: 400,
     title: "Interplay",
     webPreferences: {
@@ -340,6 +340,26 @@ ipcMain.handle("bridge:stop", () => {
 
 ipcMain.handle("bridge:status", () => {
   return getOSCBridgeStatus();
+});
+
+// --- p5.js Editor IPC Handlers ---
+
+ipcMain.handle("p5:getCode", () => {
+  if (!p5SketchPath) return { code: null, filePath: null };
+  const code = readP5SketchCode(p5SketchPath);
+  return { code, filePath: p5SketchPath };
+});
+
+ipcMain.handle("p5:saveCode", (_event, code: string) => {
+  if (!p5SketchPath) return { ok: false };
+  try {
+    if (writeP5Sketch(p5SketchPath, code)) {
+      return { ok: true, filePath: p5SketchPath };
+    }
+    return { ok: false };
+  } catch {
+    return { ok: false };
+  }
 });
 
 // --- App Lifecycle ---

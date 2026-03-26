@@ -777,3 +777,143 @@ body {
   background: var(--border);
   border-radius: 3px;
 }
+
+/* === Split Layout === */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-content.has-editor {
+  flex-direction: row;
+}
+
+.chat-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 300px;
+}
+
+/* === p5.js Editor Panel === */
+.editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 300px;
+  max-width: 60%;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.editor-filename {
+  font-size: 12px;
+  font-family: 'SF Mono', Menlo, monospace;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.editor-btn {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editor-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-btn.active {
+  background: var(--accent-light);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.editor-btn.save {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.editor-btn.save:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.editor-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.editor-code {
+  flex: 1;
+  overflow: auto;
+  background: #fafafa;
+}
+
+.editor-code textarea {
+  outline: none !important;
+}
+
+.editor-code .token.comment { color: #6a737d; }
+.editor-code .token.keyword { color: #d73a49; }
+.editor-code .token.string { color: #032f62; }
+.editor-code .token.number { color: #005cc5; }
+.editor-code .token.function { color: #6f42c1; }
+.editor-code .token.operator { color: #d73a49; }
+.editor-code .token.punctuation { color: #586069; }
+.editor-code .token.class-name { color: #6f42c1; }
+.editor-code .token.boolean { color: #005cc5; }
+
+.editor-code::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.editor-code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-code::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.editor-preview {
+  flex: 1;
+  border-top: 1px solid var(--border-light);
+  min-height: 150px;
+}
+
+.editor-preview iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}

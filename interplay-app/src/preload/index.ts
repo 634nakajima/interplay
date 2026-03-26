@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld("api", {
   checkAuth: () => ipcRenderer.invoke("auth:check"),
   login: () => ipcRenderer.invoke("auth:login"),
   loadPatch: () => ipcRenderer.invoke("patch:load"),
+  // p5.js Editor
+  p5GetCode: () => ipcRenderer.invoke("p5:getCode"),
+  p5SaveCode: (code: string) => ipcRenderer.invoke("p5:saveCode", code),
   // SerialOSC
   serialList: () => ipcRenderer.invoke("serial:list"),
   serialConnect: (portPath: string) => ipcRenderer.invoke("serial:connect", portPath),
