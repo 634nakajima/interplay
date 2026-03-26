@@ -405,7 +405,7 @@
         AIと自然言語で対話しながら<br />音響 (plugdata) と映像 (p5.js) を<br />生成・編集できるデスクトップアプリ
       </p>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
-        ※ 利用には <a href="https://claude.com/pricing" target="_blank" style="color: var(--text-muted); text-decoration: underline;">Claude Pro プラン</a>（月額 $20〜）への加入が必要です
+        AIプロバイダー: <a href="https://claude.com/pricing" target="_blank" style="color: var(--text-muted); text-decoration: underline;">Claude Pro</a>（月額 $20〜）または <a href="https://openrouter.ai/keys" target="_blank" style="color: var(--text-muted); text-decoration: underline;">OpenRouter</a>（無料）
       </p>
       <div class="hero-buttons">
         <a href="https://github.com/634nakajima/Interplay/releases/latest/download/Interplay-0.1.0-arm64-mac.zip" class="btn btn-primary">
@@ -485,7 +485,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#22c55e"><path d="M17.66 17.66l-1.06 1.06-.71-.71 1.06-1.06-1.94-1.94-1.06 1.06-.71-.71 1.06-1.06-1.94-1.94-1.06 1.06-.71-.71 1.06-1.06L9.7 9.7l-1.06 1.06-.71-.71 1.06-1.06-1.94-1.94-1.06 1.06-.71-.71L6.34 6.34 4.93 4.93a7.94 7.94 0 0 0 0 11.31l2.83 2.83a7.94 7.94 0 0 0 11.31 0l-1.41-1.41z"/></svg>
           </div>
           <h3>p5.jsビジュアル生成</h3>
-          <p>パーティクル、ノイズフィールド、3Dなどのジェネラティブビジュアルをp5.jsで生成。ブラウザで即プレビュー。</p>
+          <p>パーティクル、ノイズフィールド、3Dなどのジェネラティブビジュアルをp5.jsで生成。アプリ内エディタとプレビューで即確認。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon" style="background:rgba(59,130,246,0.15);">
@@ -512,7 +512,7 @@
         </div>
         <div class="step">
           <h3>試聴・確認 &amp; 手直し</h3>
-          <p>plugdataで音を、ブラウザで映像を確認。AIに修正を依頼するか、直接編集します。</p>
+          <p>plugdataで音を、アプリ内プレビューまたはブラウザで映像を確認。AIに修正を依頼するか、エディタで直接編集します。</p>
         </div>
         <div class="step">
           <h3>繰り返し改善</h3>
@@ -531,7 +531,9 @@
           <div class="tech">事前にインストールが必要</div>
           <ol>
             <li><a href="https://plugdata.org/" target="_blank" style="color:var(--accent-green);">plugdata</a> (Pure Data)</li>
-            <li>Claude アカウント（Proプラン以上、月額$20〜）</li>
+            <li>AIプロバイダー（どちらか1つ）:<br />
+              <a href="https://claude.com/pricing" target="_blank" style="color:var(--accent-blue);">Claude Pro</a>（月額$20〜）or
+              <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent-blue);">OpenRouter</a>（無料）</li>
           </ol>
         </div>
         <div class="req-card">
@@ -542,7 +544,7 @@
             <li><code>Interplay.app</code> をダブルクリック</li>
             <li>初回起動時は右クリック &rarr;「開く」を選択</li>
             <li>「開発元が未確認」の警告が出た場合は<br /><strong style="color:var(--text);">システム設定 &rarr; プライバシーとセキュリティ &rarr;「このまま開く」</strong></li>
-            <li>初回のみClaude認証画面が表示されます（ブラウザでログイン）</li>
+            <li>初回起動時にAIプロバイダーを選択（Claude or OpenRouter）</li>
           </ol>
         </div>
         <div class="req-card">
@@ -551,7 +553,7 @@
           <ol>
             <li>インストーラーをダウンロードして実行</li>
             <li>「WindowsによってPCが保護されました」が出た場合は<br /><strong style="color:var(--text);">「詳細情報」&rarr;「実行」</strong></li>
-            <li>初回のみClaude認証画面が表示されます（ブラウザでログイン）</li>
+            <li>初回起動時にAIプロバイダーを選択（Claude or OpenRouter）</li>
           </ol>
         </div>
       </div>
@@ -610,8 +612,8 @@
         </div>
         <div class="arch-card">
           <h3>AI Engine</h3>
-          <div class="tech">Claude Code CLI (bundled)</div>
-          <p>自然言語を理解し、plugdataパッチとp5.jsスケッチを同時に生成。OSC連携も自動構成します。</p>
+          <div class="tech">Claude Code CLI / OpenRouter API</div>
+          <p>自然言語を理解し、plugdataパッチとp5.jsスケッチを同時に生成。起動時にプロバイダーを選択。</p>
         </div>
         <div class="arch-card">
           <h3>Sound Engine</h3>
