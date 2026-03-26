@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { spawn, execSync } from "child_process";
 import path from "path";
-import { callAI, resetSession, cancelAI, getClaudeSpawnArgs } from "./ai-service";
+import { callAI, resetSession, cancelAI, getClaudeSpawnArgs, setProvider, setOpenRouterApiKey, getOpenRouterApiKey, Provider } from "./ai-service";
 import {
   readPatch,
   writePatch,
@@ -342,6 +342,21 @@ ipcMain.handle("auth:logout", async () => {
     });
   } catch (e: any) {
     console.log("[auth:logout] error:", e.message?.slice(0, 200));
+  }
+  setProvider(null as any);
+});
+
+ipcMain.handle("auth:setProvider", (_event, provider: Provider) => {
+  setProvider(provider);
+  return { success: true };
+});
+
+ipcMain.handle("auth:setOpenRouterApiKey", (_event, key: string) => {
+  try {
+    setOpenRouterApiKey(key);
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 });
 

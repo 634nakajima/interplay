@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld("api", {
   checkAuth: () => ipcRenderer.invoke("auth:check"),
   login: () => ipcRenderer.invoke("auth:login"),
   logout: () => ipcRenderer.invoke("auth:logout"),
+  setProvider: (provider: string) => ipcRenderer.invoke("auth:setProvider", provider),
+  setOpenRouterApiKey: (key: string) => ipcRenderer.invoke("auth:setOpenRouterApiKey", key),
   loadPatch: () => ipcRenderer.invoke("patch:load"),
   // p5.js Editor
   p5GetCode: () => ipcRenderer.invoke("p5:getCode"),

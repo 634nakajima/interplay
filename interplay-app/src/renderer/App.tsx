@@ -15,6 +15,8 @@ declare global {
       checkAuth: () => Promise<{ loggedIn: boolean }>;
       login: () => Promise<{ success: boolean }>;
       logout: () => Promise<void>;
+      setProvider: (provider: string) => Promise<{ success: boolean }>;
+      setOpenRouterApiKey: (key: string) => Promise<{ success: boolean; error?: string }>;
       loadPatch: () => Promise<{ loaded: boolean; path?: string; summary?: string }>;
       p5GetCode: () => Promise<{ code: string | null; filePath: string | null }>;
       p5SaveCode: (code: string) => Promise<{ ok: boolean; filePath?: string }>;

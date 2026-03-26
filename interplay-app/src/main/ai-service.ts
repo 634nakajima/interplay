@@ -4,8 +4,42 @@ import fs from "fs";
 import { app } from "electron";
 import { SYSTEM_PROMPT } from "./system-prompt";
 
+// --- Provider management ---
+
+export type Provider = "claude" | "openrouter";
+let currentProvider: Provider | null = null;
+
+export function setProvider(provider: Provider): void {
+  currentProvider = provider;
+}
+
+export function getProvider(): Provider | null {
+  return currentProvider;
+}
+
+// --- Claude-specific state ---
+
 let sessionId: string | null = null;
 let activeChild: ChildProcess | null = null;
+
+// --- OpenRouter-specific state ---
+
+let openrouterApiKey: string | null = null;
+let openrouterHistory: { role: string; content: string }[] = [];
+
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+
+export function setOpenRouterApiKey(key: string): void {
+  openrouterApiKey = key;
+  openrouterHistory = [];
+}
+
+export function getOpenRouterApiKey(): string | null {
+  return openrouterApiKey;
+}
+
+// --- Shared functions ---
 
 export function cancelAI(): void {
   if (activeChild) {
@@ -14,10 +48,21 @@ export function cancelAI(): void {
   }
 }
 
+export function resetSession(): void {
+  sessionId = null;
+  openrouterHistory = [];
+}
+
+export function callAI(fullMessage: string): Promise<string> {
+  if (currentProvider === "openrouter") {
+    return callOpenRouter(fullMessage);
+  }
+  return callClaude(fullMessage);
+}
+
+// --- Claude implementation ---
+
 function findNodeBin(): string {
-  // In packaged Electron app, use Electron Helper as node runtime
-  // ELECTRON_RUN_AS_NODE=1 makes it behave as plain node
-  // Using Helper instead of main binary avoids a Dock icon appearing
   if (app.isPackaged) {
     const helperPath = path.join(
       path.dirname(process.execPath),
@@ -25,10 +70,9 @@ function findNodeBin(): string {
       `${app.getName()} Helper.app`, "Contents", "MacOS", `${app.getName()} Helper`
     );
     if (fs.existsSync(helperPath)) return helperPath;
-    return process.execPath; // fallback to main binary
+    return process.execPath;
   }
 
-  // In dev, find system node
   const candidates = [
     "/usr/local/bin/node",
     "/opt/homebrew/bin/node",
@@ -46,18 +90,14 @@ function findNodeBin(): string {
     if (result) return result;
   } catch {}
 
-  return "node"; // fallback to PATH
+  return "node";
 }
 
 export function findClaudeBin(): string {
   const candidates = [
-    // Bundled: ASAR unpacked (packaged app — highest priority)
     path.join(process.resourcesPath || "", "app.asar.unpacked/node_modules/@anthropic-ai/claude-code/cli.js"),
-    // Bundled: Direct cli.js reference (dev)
     path.join(__dirname, "../../node_modules/@anthropic-ai/claude-code/cli.js"),
-    // Bundled: Symlink in .bin (dev)
     path.join(__dirname, "../../node_modules/.bin/claude"),
-    // System-installed (fallback)
     path.join(process.env.HOME || "", ".local/bin/claude"),
     "/usr/local/bin/claude",
   ];
@@ -68,7 +108,6 @@ export function findClaudeBin(): string {
     } catch {}
   }
 
-  // Try which/where as last resort
   try {
     const result = execSync(
       process.platform === "win32" ? "where claude" : "which claude",
@@ -77,12 +116,9 @@ export function findClaudeBin(): string {
     if (result) return result.split("\n")[0];
   } catch {}
 
-  throw new Error(
-    "claude CLI が見つかりません。Claude Code をインストールしてください。"
-  );
+  throw new Error("claude CLI が見つかりません。");
 }
 
-/** Returns [command, prefixArgs, extraEnv] for spawning claude CLI */
 export function getClaudeSpawnArgs(): [string, string[], Record<string, string>] {
   const claudeBin = findClaudeBin();
   if (claudeBin.endsWith("cli.js")) {
@@ -93,14 +129,9 @@ export function getClaudeSpawnArgs(): [string, string[], Record<string, string>]
   return [claudeBin, [], {}];
 }
 
-export function resetSession(): void {
-  sessionId = null;
-}
-
-export function callAI(fullMessage: string): Promise<string> {
+function callClaude(fullMessage: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const [cmd, prefixArgs, extraEnv] = getClaudeSpawnArgs();
-    console.log("[ai-service] using:", cmd, prefixArgs);
 
     const args = [
       ...prefixArgs,
@@ -117,8 +148,6 @@ export function callAI(fullMessage: string): Promise<string> {
     if (sessionId) {
       args.push("--resume", sessionId);
     }
-
-    console.log("[ai-service] spawning:", cmd, "with", args.length, "args");
 
     const child = spawn(cmd, args, {
       stdio: ["ignore", "pipe", "pipe"],
@@ -144,17 +173,14 @@ export function callAI(fullMessage: string): Promise<string> {
 
     child.on("error", (err) => {
       clearTimeout(timer);
-      console.error("[ai-service] spawn error:", err.message);
       reject(new Error(`Claude CLI 起動エラー: ${err.message}`));
     });
 
     child.on("close", (code) => {
       clearTimeout(timer);
       activeChild = null;
-      console.log("[ai-service] process closed, code:", code, "stdout length:", stdout.length);
 
       if (code !== 0 && !stdout) {
-        // code 143 = SIGTERM (cancelled by user)
         if (code === 143 || code === null) {
           reject(new Error("cancelled"));
           return;
@@ -170,11 +196,7 @@ export function callAI(fullMessage: string): Promise<string> {
         }
         const result = data.result || "";
         if (!result) {
-          reject(
-            new Error(
-              `応答が空です (subtype: ${data.subtype || "?"}, stop_reason: ${data.stop_reason || "?"})`
-            )
-          );
+          reject(new Error(`応答が空です`));
           return;
         }
         resolve(result);
@@ -183,4 +205,81 @@ export function callAI(fullMessage: string): Promise<string> {
       }
     });
   });
+}
+
+// --- OpenRouter implementation ---
+
+async function callOpenRouter(fullMessage: string): Promise<string> {
+  if (!openrouterApiKey) {
+    throw new Error("OpenRouter API key が設定されていません。");
+  }
+
+  openrouterHistory.push({
+    role: "user",
+    content: fullMessage,
+  });
+
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...openrouterHistory,
+  ];
+
+  try {
+    const payload = JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages,
+      max_tokens: 8192,
+      temperature: 0.7,
+    });
+
+    const result = await new Promise<string>((resolve, reject) => {
+      const https = require("https");
+      const url = new URL(OPENROUTER_URL);
+      const req = https.request({
+        hostname: url.hostname,
+        path: url.pathname,
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + openrouterApiKey,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://github.com/634nakajima/interplay",
+          "X-Title": "Interplay",
+        },
+      }, (res: any) => {
+        let data = "";
+        res.on("data", (chunk: any) => { data += chunk; });
+        res.on("end", () => {
+          if (res.statusCode >= 400) {
+            reject(new Error(data.slice(0, 300)));
+          } else {
+            resolve(data);
+          }
+        });
+      });
+      req.on("error", reject);
+      req.write(payload);
+      req.end();
+    });
+
+    const data = JSON.parse(result);
+    const content = data.choices?.[0]?.message?.content || "";
+
+    if (!content) {
+      throw new Error("応答が空です");
+    }
+
+    openrouterHistory.push({
+      role: "assistant",
+      content,
+    });
+
+    return content;
+  } catch (err: any) {
+    openrouterHistory.pop();
+
+    if (err.name === "AbortError") {
+      throw new Error("cancelled");
+    }
+    throw new Error(`API エラー: ${err.message?.slice(0, 300)}`);
+  }
 }
