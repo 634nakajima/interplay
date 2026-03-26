@@ -6,9 +6,9 @@
   <title>Interplay — AIと対話して音と映像を生成</title>
   <link rel="icon" type="image/png" href="images/favicon.png" />
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
-  <meta name="description" content="Interplayは、自然言語でPure Data（plugdata）パッチとp5.jsビジュアルスケッチを対話的に生成・編集できるデスクトップアプリです。" />
+  <meta name="description" content="Interplayは、自然言語でplugdata（Pure Data）パッチとp5.jsビジュアルスケッチを対話的に生成・編集できるデスクトップアプリです。" />
   <meta property="og:title" content="Interplay — AIと対話して音と映像を生成" />
-  <meta property="og:description" content="自然言語でPure Dataパッチとp5.jsビジュアルを対話的に生成・編集できるデスクトップアプリ" />
+  <meta property="og:description" content="自然言語でplugdataパッチとp5.jsビジュアルを対話的に生成・編集できるデスクトップアプリ" />
   <meta property="og:type" content="website" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -402,7 +402,7 @@
       </div>
       <h1>Interplay</h1>
       <p class="subtitle">
-        AIと自然言語で対話しながら<br />音響 (Pure Data) と映像 (p5.js) を<br />生成・編集できるデスクトップアプリ
+        AIと自然言語で対話しながら<br />音響 (plugdata) と映像 (p5.js) を<br />生成・編集できるデスクトップアプリ
       </p>
       <div class="hero-buttons">
         <a href="https://github.com/634nakajima/Interplay/releases/latest/download/Interplay-0.1.0-arm64-mac.zip" class="btn btn-primary">
@@ -454,7 +454,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#22c55e"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
           </div>
           <h3>自然言語でパッチ生成</h3>
-          <p>「グラニュラー合成のパッチを作って」のように日本語で指示するだけ。Pdの構文を知らなくても音響パッチを作れます。</p>
+          <p>「グラニュラー合成のパッチを作って」のように日本語で指示するだけ。plugdataの構文を知らなくても音響パッチを作れます。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon" style="background:rgba(59,130,246,0.15);">
@@ -489,7 +489,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#3b82f6"><path d="M7.5 21H2V9l10-7 10 7v12h-5.5v-7h-4v7z"/></svg>
           </div>
           <h3>双方向OSCブリッジ</h3>
-          <p>Pd↔p5.js間のリアルタイム通信をアプリが自動で中継。音と映像の連携パッチを一度に生成します。</p>
+          <p>plugdata↔p5.js間のリアルタイム通信をアプリが自動で中継。音と映像の連携パッチを一度に生成します。</p>
         </div>
       </div>
     </section>
@@ -505,7 +505,7 @@
         </div>
         <div class="step">
           <h3>AIが自動判断</h3>
-          <p>音響はPdパッチ、映像はp5.jsスケッチ、両方必要なら同時に生成。OSC連携も自動構成。</p>
+          <p>音響はplugdataパッチ、映像はp5.jsスケッチ、両方必要なら同時に生成。OSC連携も自動構成。</p>
         </div>
         <div class="step">
           <h3>試聴・確認 &amp; 手直し</h3>
@@ -608,7 +608,7 @@
         <div class="arch-card">
           <h3>AI Engine</h3>
           <div class="tech">Claude Code CLI (bundled)</div>
-          <p>自然言語を理解し、PdパッチとP5.jsスケッチを同時に生成。OSC連携も自動構成します。</p>
+          <p>自然言語を理解し、plugdataパッチとp5.jsスケッチを同時に生成。OSC連携も自動構成します。</p>
         </div>
         <div class="arch-card">
           <h3>Sound Engine</h3>
@@ -626,7 +626,7 @@
     <!-- CTA -->
     <div class="cta">
       <h2>AIと一緒に音と映像を作ろう</h2>
-      <p>オープンソースで無料。Pure Dataとp5.jsの新しい制作体験を。</p>
+      <p>オープンソースで無料。plugdataとp5.jsの新しい制作体験を。</p>
       <div class="hero-buttons">
         <a href="https://github.com/634nakajima/Interplay/releases/latest/download/Interplay-0.1.0-arm64-mac.zip" class="btn btn-primary">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
