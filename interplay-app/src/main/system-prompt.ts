@@ -271,8 +271,13 @@ osc~ → else/rotate~ 4; hsl → else/float2sig~ 100 → rotate~ inlet4 → else
 
 ## GUIオブジェクト
 ユーザーがパラメータをリアルタイムに操作したい場合にGUIを追加する：
-- hsl (水平スライダー): \`#X obj x y hsl width height bottom top log init_value send receive label x_off y_off font fontsize bg_color fg_color label_color default_value steady;\`
-- vsl (垂直スライダー): 同様
+- hsl (水平スライダー):
+  \`#X obj x y hsl 幅 高さ 最小値 最大値 log init_value センド名 レシーブ名 ラベル xオフセット yオフセット フォント フォントサイズ 背景色 前景色 ラベル色 デフォルト値 steady;\`
+  **重要**: 最小値・最大値を指定する場合、それ以降の引数をすべて省略せず記述すること。引数が不足するとスライダーが正しく動作しない。
+  デフォルト例: \`#X obj 50 50 hsl 136 16 0 127 0 0 empty empty empty -2 -8 0 10 #fcfcfc #000000 #000000 0 1;\`
+  範囲を変更する例（0〜1000）: \`#X obj 50 50 hsl 136 16 0 1000 0 0 empty empty empty -2 -8 0 10 #fcfcfc #000000 #000000 0 1;\`
+- vsl (垂直スライダー): hsl と同じ引数形式（幅・高さのデフォルトが異なる: 16 136）
+  デフォルト例: \`#X obj 50 50 vsl 16 136 0 127 0 0 empty empty empty 0 -9 0 10 #fcfcfc #000000 #000000 0 1;\`
 - tgl (トグル): \`#X obj x y tgl size init send receive label ...;\`
 - bng (バング): \`#X obj x y bng size hold interrupt init send receive label ...;\`
 - nbx (ナンバーボックス): \`#X obj x y nbx width height min max log init send receive label ...;\`
