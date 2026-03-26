@@ -18,16 +18,20 @@ export function isPatchUpdate(filepath: string): boolean {
 }
 
 /**
- * Close all patches in plugdata/Pd by sending "pd quit" via -send option.
- * plugdata goes back to its initial screen, ready to open a new patch.
+ * Quit plugdata/Pd so old patches are closed before opening an updated one.
+ * Uses AppleScript 'quit saving no' to skip save dialogs.
  */
 export function closePatchInPd(): Promise<void> {
   return new Promise((resolve) => {
     if (process.platform === "darwin") {
-      // Send quit to both plugdata and Pd (whichever is running)
-      exec(`open -a plugdata --args -send "pd quit" 2>/dev/null; open -a Pd --args -send "pd quit" 2>/dev/null`, () => {
-        setTimeout(resolve, 500);
-      });
+      // Quit whichever is running (errors are expected and ignored)
+      exec(
+        `osascript -e 'tell application "plugdata" to quit saving no' 2>/dev/null; osascript -e 'tell application "Pd" to quit saving no' 2>/dev/null`,
+        () => {
+          // Wait for process to fully exit before opening new patch
+          setTimeout(resolve, 800);
+        }
+      );
     } else {
       resolve();
     }
