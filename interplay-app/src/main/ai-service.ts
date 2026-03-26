@@ -15,15 +15,15 @@ export function cancelAI(): void {
 
 export function findClaudeBin(): string {
   const candidates = [
-    // System-installed (preferred in dev — known to work)
+    // Bundled: ASAR unpacked (packaged app — highest priority)
+    path.join(process.resourcesPath || "", "app.asar.unpacked/node_modules/@anthropic-ai/claude-code/cli.js"),
+    // Bundled: Direct cli.js reference (dev)
+    path.join(__dirname, "../../node_modules/@anthropic-ai/claude-code/cli.js"),
+    // Bundled: Symlink in .bin (dev)
+    path.join(__dirname, "../../node_modules/.bin/claude"),
+    // System-installed (fallback)
     path.join(process.env.HOME || "", ".local/bin/claude"),
     "/usr/local/bin/claude",
-    // Symlink in .bin (dev)
-    path.join(__dirname, "../../node_modules/.bin/claude"),
-    // ASAR unpacked (packaged app)
-    path.join(process.resourcesPath || "", "app.asar.unpacked/node_modules/@anthropic-ai/claude-code/cli.js"),
-    // Direct cli.js reference
-    path.join(__dirname, "../../node_modules/@anthropic-ai/claude-code/cli.js"),
   ];
 
   for (const p of candidates) {
