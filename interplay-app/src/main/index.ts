@@ -15,7 +15,7 @@ import {
   summarizeP5Sketch,
 } from "./p5-file";
 import { openPatchInPd } from "./file-opener";
-import { serveAndOpenP5Sketch } from "./p5-server";
+import { serveAndOpenP5Sketch, serveP5Sketch } from "./p5-server";
 import {
   listSerialPorts,
   connectSerial,
@@ -38,15 +38,16 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 700,
+    width: 1200,
+    height: 900,
     minWidth: 600,
-    minHeight: 400,
+    minHeight: 500,
     title: "Interplay",
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      webviewTag: true,
     },
   });
 
@@ -175,8 +176,8 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
           path: p5SketchPath,
           summary: summarizeP5Sketch(p5Content),
         };
-        // Serve via local HTTP and open in browser
-        serveAndOpenP5Sketch(p5SketchPath);
+        // Start server for preview (don't open browser)
+        serveP5Sketch(p5SketchPath);
       }
     }
 
@@ -235,6 +236,8 @@ ipcMain.handle("patch:load", async () => {
     patchPath = filePath;
     lastPatchMtime = getPatchMtime(patchPath);
     const content = readPatch(patchPath);
+    // Open in plugdata
+    openPatchInPd(patchPath);
     return {
       loaded: true,
       path: patchPath,
@@ -244,6 +247,8 @@ ipcMain.handle("patch:load", async () => {
   } else if (ext === ".html") {
     p5SketchPath = filePath;
     const code = readP5SketchCode(filePath);
+    // Start p5 server so preview works (don't open browser)
+    serveP5Sketch(filePath);
     return {
       loaded: true,
       path: p5SketchPath,
@@ -354,11 +359,19 @@ ipcMain.handle("p5:saveCode", (_event, code: string) => {
   if (!p5SketchPath) return { ok: false };
   try {
     if (writeP5Sketch(p5SketchPath, code)) {
+      // Update server to serve the updated file (don't open browser)
+      serveP5Sketch(p5SketchPath);
       return { ok: true, filePath: p5SketchPath };
     }
     return { ok: false };
   } catch {
     return { ok: false };
+  }
+});
+
+ipcMain.handle("p5:openInBrowser", () => {
+  if (p5SketchPath) {
+    serveAndOpenP5Sketch(p5SketchPath);
   }
 });
 

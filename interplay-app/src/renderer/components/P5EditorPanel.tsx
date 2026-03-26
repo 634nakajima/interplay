@@ -17,16 +17,86 @@ export default function P5EditorPanel({
   const [localCode, setLocalCode] = useState(code);
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const previewKey = useRef(0);
+  const [showPreview, setShowPreview] = useState(false);
+  const [delayedPreview, setDelayedPreview] = useState(false);
+  const [codeHeight, setCodeHeight] = useState(50); // percentage
 
-  // Sync when external code changes (AI generation)
+  // Auto-enable preview after component mount with delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPreview(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const webviewElRef = useRef<any>(null);
+  const isDraggingV = useRef(false);
+
+  // Vertical drag resize between code and preview
+  const handleVMouseDown = useCallback(() => {
+    isDraggingV.current = true;
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingV.current || !panelRef.current) return;
+      const rect = panelRef.current.getBoundingClientRect();
+      // Subtract toolbar height (~34px)
+      const toolbarH = 34;
+      const availH = rect.height - toolbarH;
+      const pct = ((e.clientY - rect.top - toolbarH) / availH) * 100;
+      setCodeHeight(Math.max(20, Math.min(80, pct)));
+    };
+    const handleMouseUp = () => {
+      isDraggingV.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
+  // Create webview element imperatively (React JSX doesn't support <webview>)
+  useEffect(() => {
+    if (!showPreview || !previewContainerRef.current) return;
+
+    const container = previewContainerRef.current;
+    container.innerHTML = "";
+
+    const wv = document.createElement("webview");
+    wv.setAttribute("src", `http://127.0.0.1:7402/?t=${Date.now()}`);
+    wv.style.width = "100%";
+    wv.style.height = "100%";
+    container.appendChild(wv);
+    webviewElRef.current = wv;
+
+    return () => {
+      container.innerHTML = "";
+      webviewElRef.current = null;
+    };
+  }, [showPreview]);
+
+  // Reload preview when code changes externally (AI generation)
   useEffect(() => {
     setLocalCode(code);
     setIsDirty(false);
-    previewKey.current += 1;
+    if (webviewElRef.current) {
+      webviewElRef.current.loadURL(`http://127.0.0.1:7402/?t=${Date.now()}`);
+    }
   }, [code]);
+
+  const reloadPreview = () => {
+    if (webviewElRef.current) {
+      webviewElRef.current.loadURL(`http://127.0.0.1:7402/?t=${Date.now()}`);
+    }
+  };
 
   const handleChange = (newCode: string) => {
     setLocalCode(newCode);
@@ -40,11 +110,7 @@ export default function P5EditorPanel({
       if (result.ok) {
         setIsDirty(false);
         onCodeChange(localCode);
-        // Reload preview
-        previewKey.current += 1;
-        if (iframeRef.current) {
-          iframeRef.current.src = `http://127.0.0.1:7402/?t=${Date.now()}`;
-        }
+        setTimeout(reloadPreview, 200);
       }
     } finally {
       setSaving(false);
@@ -70,7 +136,7 @@ export default function P5EditorPanel({
   const fileName = filePath ? filePath.split("/").pop() : "untitled.html";
 
   return (
-    <div className="editor-panel">
+    <div className="editor-panel" ref={panelRef}>
       <div className="editor-toolbar">
         <span className="editor-filename">
           {isDirty ? "● " : ""}
@@ -85,6 +151,13 @@ export default function P5EditorPanel({
             ▶
           </button>
           <button
+            className="editor-btn"
+            onClick={() => (window as any).api.p5OpenInBrowser()}
+            title="ブラウザでプレビュー"
+          >
+            🌐
+          </button>
+          <button
             className="editor-btn save"
             onClick={handleSave}
             disabled={!isDirty || saving}
@@ -96,7 +169,7 @@ export default function P5EditorPanel({
       </div>
       <div
         className="editor-code"
-        style={{ flex: showPreview ? "1 1 50%" : "1 1 100%" }}
+        style={{ flex: showPreview ? `0 0 ${codeHeight}%` : "1 1 100%" }}
       >
         <Editor
           value={localCode}
@@ -112,15 +185,10 @@ export default function P5EditorPanel({
         />
       </div>
       {showPreview && (
-        <div className="editor-preview">
-          <iframe
-            ref={iframeRef}
-            key={previewKey.current}
-            src={`http://127.0.0.1:7402/?t=${Date.now()}`}
-            title="p5.js Preview"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        </div>
+        <>
+          <div className="split-handle-v" onMouseDown={handleVMouseDown} />
+          <div className="editor-preview" ref={previewContainerRef} />
+        </>
       )}
     </div>
   );

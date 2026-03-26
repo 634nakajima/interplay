@@ -401,30 +401,39 @@ body {
 
 /* Input Area */
 .input-area {
-  padding: 12px 20px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  padding: 12px 20px 16px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-area-inner {
+  flex: 1;
   display: flex;
   gap: 8px;
   align-items: flex-end;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 .input-area textarea {
   flex: 1;
-  padding: 10px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
   color: var(--text);
   font-size: 14px;
   font-family: inherit;
   resize: none;
   outline: none;
-  min-height: 40px;
+  min-height: 24px;
   max-height: 120px;
 }
 
-.input-area textarea:focus {
+.input-area-inner:focus-within {
   border-color: var(--accent);
 }
 
@@ -433,15 +442,16 @@ body {
 }
 
 .input-area button {
-  padding: 10px 20px;
+  padding: 6px 16px;
   background: var(--accent);
   border: none;
   border-radius: 8px;
   color: #ffffff;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .input-area button:hover:not(:disabled) {
@@ -453,13 +463,15 @@ body {
   cursor: not-allowed;
 }
 
-/* Status Bar */
-.status-bar {
-  padding: 4px 20px;
-  background: var(--surface-alt);
-  border-top: 1px solid var(--border-light);
+/* Status text under input */
+.input-status {
   font-size: 11px;
   color: var(--text-muted);
+  text-align: center;
+  padding-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Loading Screen */
@@ -582,6 +594,9 @@ body {
   padding: 20px;
   gap: 16px;
   overflow: hidden;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .serial-osc-header {
@@ -795,7 +810,24 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-width: 300px;
+  min-width: 250px;
+}
+
+.main-content:not(.has-editor) .chat-side {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.split-handle {
+  width: 5px;
+  cursor: col-resize;
+  background: var(--border-light);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.split-handle:hover {
+  background: var(--accent);
 }
 
 /* === p5.js Editor Panel === */
@@ -905,10 +937,21 @@ body {
   border-radius: 3px;
 }
 
+.split-handle-v {
+  height: 5px;
+  cursor: row-resize;
+  background: var(--border-light);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.split-handle-v:hover {
+  background: var(--accent);
+}
+
 .editor-preview {
   flex: 1;
-  border-top: 1px solid var(--border-light);
-  min-height: 150px;
+  min-height: 100px;
 }
 
 .editor-preview iframe {

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("api", {
   // p5.js Editor
   p5GetCode: () => ipcRenderer.invoke("p5:getCode"),
   p5SaveCode: (code: string) => ipcRenderer.invoke("p5:saveCode", code),
+  p5OpenInBrowser: () => ipcRenderer.invoke("p5:openInBrowser"),
   // SerialOSC
   serialList: () => ipcRenderer.invoke("serial:list"),
   serialConnect: (portPath: string) => ipcRenderer.invoke("serial:connect", portPath),

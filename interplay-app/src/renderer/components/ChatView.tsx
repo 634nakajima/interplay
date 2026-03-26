@@ -7,9 +7,10 @@ interface Props {
   loading: boolean;
   onSend: (text: string) => void;
   onCancel: () => void;
+  statusText?: string | null;
 }
 
-export default function ChatView({ messages, loading, onSend, onCancel }: Props) {
+export default function ChatView({ messages, loading, onSend, onCancel, statusText }: Props) {
   const [input, setInput] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -86,20 +87,25 @@ export default function ChatView({ messages, loading, onSend, onCancel }: Props)
         <div ref={bottomRef} />
       </div>
       <div className="input-area">
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onCompositionStart={() => { isComposingRef.current = true; }}
-          onCompositionEnd={() => { isComposingRef.current = false; }}
-          placeholder="パッチの作成・修正を指示..."
-          disabled={loading}
-          rows={1}
-        />
-        <button onClick={handleSubmit} disabled={loading || !input.trim()}>
-          送信
-        </button>
+        <div className="input-area-inner">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={() => { isComposingRef.current = false; }}
+            placeholder="パッチの作成・修正を指示..."
+            disabled={loading}
+            rows={1}
+          />
+          <button onClick={handleSubmit} disabled={loading || !input.trim()}>
+            送信
+          </button>
+        </div>
+        {statusText && (
+          <div className="input-status">{statusText}</div>
+        )}
       </div>
     </div>
   );

@@ -106,6 +106,11 @@ export function callAI(fullMessage: string): Promise<string> {
       console.log("[ai-service] process closed, code:", code, "stdout length:", stdout.length);
 
       if (code !== 0 && !stdout) {
+        // code 143 = SIGTERM (cancelled by user)
+        if (code === 143 || code === null) {
+          reject(new Error("cancelled"));
+          return;
+        }
         reject(new Error(`Claude CLI エラー (code ${code}): ${stderr.slice(0, 300)}`));
         return;
       }

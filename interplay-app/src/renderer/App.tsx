@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ChatView from "./components/ChatView";
 import StatusBar from "./components/StatusBar";
 import LoginScreen from "./components/LoginScreen";
@@ -17,6 +17,7 @@ declare global {
       loadPatch: () => Promise<{ loaded: boolean; path?: string; summary?: string }>;
       p5GetCode: () => Promise<{ code: string | null; filePath: string | null }>;
       p5SaveCode: (code: string) => Promise<{ ok: boolean; filePath?: string }>;
+      p5OpenInBrowser: () => Promise<void>;
     };
   }
 }
@@ -41,6 +42,35 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"chat" | "serial">("chat");
   const [p5Code, setP5Code] = useState<string | null>(null);
   const [p5FilePath, setP5FilePath] = useState<string | null>(null);
+  const [chatWidth, setChatWidth] = useState(50); // percentage
+  const isDragging = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = useCallback(() => {
+    isDragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setChatWidth(Math.max(25, Math.min(75, pct)));
+    };
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   useEffect(() => {
     window.api.checkAuth().then((result) => {
@@ -87,9 +117,11 @@ export default function App() {
         }
       });
     } catch (err: any) {
+      const msg = err.message || "";
+      const isCancelled = msg.includes("code 143") || msg.includes("cancel") || msg.includes("SIGTERM");
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", error: err.message },
+        { role: "assistant", description: isCancelled ? "キャンセルされました" : undefined, error: isCancelled ? undefined : msg },
       ]);
     } finally {
       setLoading(false);
@@ -171,8 +203,8 @@ export default function App() {
         </div>
       </header>
       {activeTab === "chat" ? (
-        <div className={`main-content ${p5Code ? "has-editor" : ""}`}>
-          <div className="chat-side">
+        <div className={`main-content ${p5Code ? "has-editor" : ""}`} ref={containerRef}>
+          <div className="chat-side" style={p5Code ? { flex: `0 0 ${chatWidth}%` } : undefined}>
             <ChatView
               messages={messages}
               loading={loading}
@@ -181,15 +213,18 @@ export default function App() {
                 await window.api.cancelMessage();
                 setLoading(false);
               }}
+              statusText={status?.patchPath || "パッチ生成時に保存先を選択できます"}
             />
-            <StatusBar status={status} />
           </div>
           {p5Code && (
-            <P5EditorPanel
-              code={p5Code}
-              filePath={p5FilePath}
-              onCodeChange={(newCode) => setP5Code(newCode)}
-            />
+            <>
+              <div className="split-handle" onMouseDown={handleMouseDown} />
+              <P5EditorPanel
+                code={p5Code}
+                filePath={p5FilePath}
+                onCodeChange={(newCode) => setP5Code(newCode)}
+              />
+            </>
           )}
         </div>
       ) : (
