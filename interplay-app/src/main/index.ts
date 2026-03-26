@@ -14,7 +14,7 @@ import {
   writeP5Sketch,
   summarizeP5Sketch,
 } from "./p5-file";
-import { openPatchInPd, isPatchUpdate } from "./file-opener";
+import { openPatchInPd, isPatchUpdate, closePatchInPd } from "./file-opener";
 import { serveAndOpenP5Sketch, serveP5Sketch } from "./p5-server";
 import {
   listSerialPorts,
@@ -149,6 +149,9 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
       const dir = path.dirname(patchPath);
       fs.mkdirSync(dir, { recursive: true });
       const isUpdate = isPatchUpdate(patchPath);
+      if (isUpdate) {
+        await closePatchInPd();
+      }
       if (writePatch(patchPath, patchContent)) {
         lastPatchMtime = getPatchMtime(patchPath);
         patchInfo = {

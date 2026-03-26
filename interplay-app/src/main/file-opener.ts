@@ -7,8 +7,7 @@ import fs from "fs";
  * On macOS, uses AppleScript to close the specific document window.
  */
 /**
- * Returns true if this is a patch update (not first creation),
- * meaning the user should close the old patch window.
+ * Returns true if this is a patch update (not first creation).
  */
 export function isPatchUpdate(filepath: string): boolean {
   try {
@@ -16,6 +15,23 @@ export function isPatchUpdate(filepath: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Close all patches in plugdata/Pd by sending "pd quit" via -send option.
+ * plugdata goes back to its initial screen, ready to open a new patch.
+ */
+export function closePatchInPd(): Promise<void> {
+  return new Promise((resolve) => {
+    if (process.platform === "darwin") {
+      // Send quit to both plugdata and Pd (whichever is running)
+      exec(`open -a plugdata --args -send "pd quit" 2>/dev/null; open -a Pd --args -send "pd quit" 2>/dev/null`, () => {
+        setTimeout(resolve, 500);
+      });
+    } else {
+      resolve();
+    }
+  });
 }
 
 export function openPatchInPd(filepath: string): void {
