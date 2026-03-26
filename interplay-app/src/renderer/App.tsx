@@ -99,9 +99,13 @@ export default function App() {
 
     try {
       const result = await window.api.sendMessage(text);
+      let desc = result.description || "";
+      if (result.patchIsUpdate) {
+        desc += "\n\n⚠️ パッチが更新されました。Pd/plugdataで古いパッチが開いている場合は閉じてから、新しいパッチを確認してください。";
+      }
       const aiMsg: Message = {
         role: "assistant",
-        description: result.description,
+        description: desc,
         tips: result.tips,
         changes: result.changes,
         suggestions: result.suggestions,

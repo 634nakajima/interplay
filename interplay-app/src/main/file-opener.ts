@@ -1,35 +1,21 @@
 import { exec } from "child_process";
 import path from "path";
+import fs from "fs";
 
 /**
  * Close the patch file in plugdata before reopening.
  * On macOS, uses AppleScript to close the specific document window.
  */
-export function closePatchInPd(filepath: string): Promise<void> {
-  const absPath = path.resolve(filepath);
-  const fname = path.basename(absPath);
-  return new Promise((resolve) => {
-    if (process.platform === "darwin") {
-      // Try both plugdata and Pd
-      const script = `
-        tell application "System Events"
-          set appList to {"plugdata", "Pd", "Pd-extended"}
-          repeat with appName in appList
-            if exists (process appName) then
-              tell application appName
-                try
-                  close (every window whose name contains "${fname}")
-                end try
-              end tell
-            end if
-          end repeat
-        end tell
-      `;
-      exec(`osascript -e '${script}'`, () => resolve());
-    } else {
-      resolve();
-    }
-  });
+/**
+ * Returns true if this is a patch update (not first creation),
+ * meaning the user should close the old patch window.
+ */
+export function isPatchUpdate(filepath: string): boolean {
+  try {
+    return fs.existsSync(filepath);
+  } catch {
+    return false;
+  }
 }
 
 export function openPatchInPd(filepath: string): void {
