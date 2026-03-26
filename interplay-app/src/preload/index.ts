@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld("api", {
   getStatus: () => ipcRenderer.invoke("status:get"),
   checkAuth: () => ipcRenderer.invoke("auth:check"),
   login: () => ipcRenderer.invoke("auth:login"),
+  logout: () => ipcRenderer.invoke("auth:logout"),
   loadPatch: () => ipcRenderer.invoke("patch:load"),
   // p5.js Editor
   p5GetCode: () => ipcRenderer.invoke("p5:getCode"),

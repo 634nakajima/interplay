@@ -14,6 +14,7 @@ declare global {
       getStatus: () => Promise<any>;
       checkAuth: () => Promise<{ loggedIn: boolean }>;
       login: () => Promise<{ success: boolean }>;
+      logout: () => Promise<void>;
       loadPatch: () => Promise<{ loaded: boolean; path?: string; summary?: string }>;
       p5GetCode: () => Promise<{ code: string | null; filePath: string | null }>;
       p5SaveCode: (code: string) => Promise<{ ok: boolean; filePath?: string }>;
@@ -211,6 +212,15 @@ export default function App() {
               </button>
               <button className="header-btn" onClick={handleLoadPatch}>
                 開く
+              </button>
+              <button
+                className="header-btn"
+                onClick={async () => {
+                  await window.api.logout();
+                  setLoggedIn(false);
+                }}
+              >
+                ログアウト
               </button>
             </>
           )}

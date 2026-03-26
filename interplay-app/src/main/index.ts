@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { spawn, execSync } from "child_process";
 import path from "path";
-import { callAI, resetSession, cancelAI, findClaudeBin } from "./ai-service";
+import { callAI, resetSession, cancelAI, getClaudeSpawnArgs } from "./ai-service";
 import {
   readPatch,
   writePatch,
@@ -274,14 +274,20 @@ ipcMain.handle("status:get", () => {
 
 ipcMain.handle("auth:check", async () => {
   try {
-    const claudeBin = findClaudeBin();
-    const result = execSync(`"${claudeBin}" auth status --json`, {
+    const [cmd, prefixArgs, extraEnv] = getClaudeSpawnArgs();
+    const fullCmd = prefixArgs.length > 0
+      ? `"${cmd}" ${prefixArgs.map(a => `"${a}"`).join(" ")} auth status --json`
+      : `"${cmd}" auth status --json`;
+    console.log("[auth:check] cmd:", fullCmd);
+    const result = execSync(fullCmd, {
       encoding: "utf-8",
       timeout: 10_000,
+      env: { ...process.env, ...extraEnv },
     });
     const data = JSON.parse(result);
     return { loggedIn: data.loggedIn === true };
-  } catch {
+  } catch (e: any) {
+    console.log("[auth:check] error:", e.message?.slice(0, 200));
     return { loggedIn: false };
   }
 });
@@ -289,23 +295,48 @@ ipcMain.handle("auth:check", async () => {
 ipcMain.handle("auth:login", async () => {
   return new Promise((resolve) => {
     try {
-      const claudeBin = findClaudeBin();
-      const child = spawn(claudeBin, ["auth", "login"], {
+      const [cmd, prefixArgs, extraEnv] = getClaudeSpawnArgs();
+      const args = [...prefixArgs, "auth", "login"];
+      console.log("[auth:login] cmd:", cmd, "args:", args);
+
+      const child = spawn(cmd, args, {
         stdio: ["ignore", "pipe", "pipe"],
-        env: { ...process.env },
+        env: { ...process.env, ...extraEnv },
       });
 
+      let stderr = "";
+      child.stderr?.on("data", (d: Buffer) => { stderr += d.toString(); });
+
       child.on("close", (code) => {
+        console.log("[auth:login] exit code:", code, "stderr:", stderr.slice(0, 200));
         resolve({ success: code === 0 });
       });
 
-      child.on("error", () => {
+      child.on("error", (err) => {
+        console.log("[auth:login] spawn error:", err.message);
         resolve({ success: false });
       });
-    } catch {
+    } catch (e: any) {
+      console.log("[auth:login] catch:", e.message);
       resolve({ success: false });
     }
   });
+});
+
+ipcMain.handle("auth:logout", async () => {
+  try {
+    const [cmd, prefixArgs, extraEnv] = getClaudeSpawnArgs();
+    const fullCmd = prefixArgs.length > 0
+      ? `"${cmd}" ${prefixArgs.map(a => `"${a}"`).join(" ")} auth logout`
+      : `"${cmd}" auth logout`;
+    execSync(fullCmd, {
+      encoding: "utf-8",
+      timeout: 10_000,
+      env: { ...process.env, ...extraEnv },
+    });
+  } catch (e: any) {
+    console.log("[auth:logout] error:", e.message?.slice(0, 200));
+  }
 });
 
 // --- SerialOSC IPC Handlers ---

@@ -1,6 +1,7 @@
 import { spawn, execSync, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
+import { app } from "electron";
 import { SYSTEM_PROMPT } from "./system-prompt";
 
 let sessionId: string | null = null;
@@ -11,6 +12,41 @@ export function cancelAI(): void {
     activeChild.kill();
     activeChild = null;
   }
+}
+
+function findNodeBin(): string {
+  // In packaged Electron app, use Electron Helper as node runtime
+  // ELECTRON_RUN_AS_NODE=1 makes it behave as plain node
+  // Using Helper instead of main binary avoids a Dock icon appearing
+  if (app.isPackaged) {
+    const helperPath = path.join(
+      path.dirname(process.execPath),
+      "..", "Frameworks",
+      `${app.getName()} Helper.app`, "Contents", "MacOS", `${app.getName()} Helper`
+    );
+    if (fs.existsSync(helperPath)) return helperPath;
+    return process.execPath; // fallback to main binary
+  }
+
+  // In dev, find system node
+  const candidates = [
+    "/usr/local/bin/node",
+    "/opt/homebrew/bin/node",
+    path.join(process.env.HOME || "", ".local/bin/node"),
+  ];
+
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch {}
+  }
+
+  try {
+    const result = execSync("which node", { encoding: "utf-8" }).trim();
+    if (result) return result;
+  } catch {}
+
+  return "node"; // fallback to PATH
 }
 
 export function findClaudeBin(): string {
@@ -46,16 +82,28 @@ export function findClaudeBin(): string {
   );
 }
 
+/** Returns [command, prefixArgs, extraEnv] for spawning claude CLI */
+export function getClaudeSpawnArgs(): [string, string[], Record<string, string>] {
+  const claudeBin = findClaudeBin();
+  if (claudeBin.endsWith("cli.js")) {
+    const nodeBin = findNodeBin();
+    const extraEnv = app.isPackaged ? { ELECTRON_RUN_AS_NODE: "1" } : {};
+    return [nodeBin, [claudeBin], extraEnv];
+  }
+  return [claudeBin, [], {}];
+}
+
 export function resetSession(): void {
   sessionId = null;
 }
 
 export function callAI(fullMessage: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const claudeBin = findClaudeBin();
-    console.log("[ai-service] using claude at:", claudeBin);
+    const [cmd, prefixArgs, extraEnv] = getClaudeSpawnArgs();
+    console.log("[ai-service] using:", cmd, prefixArgs);
 
     const args = [
+      ...prefixArgs,
       "-p",
       fullMessage,
       "--system-prompt",
@@ -70,11 +118,11 @@ export function callAI(fullMessage: string): Promise<string> {
       args.push("--resume", sessionId);
     }
 
-    console.log("[ai-service] spawning with", args.length, "args");
+    console.log("[ai-service] spawning:", cmd, "with", args.length, "args");
 
-    const child = spawn(claudeBin, args, {
+    const child = spawn(cmd, args, {
       stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env },
+      env: { ...process.env, ...extraEnv },
     });
     activeChild = child;
 
