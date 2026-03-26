@@ -14,7 +14,7 @@ import {
   writeP5Sketch,
   summarizeP5Sketch,
 } from "./p5-file";
-import { openPatchInPd } from "./file-opener";
+import { openPatchInPd, closePatchInPd } from "./file-opener";
 import { serveAndOpenP5Sketch, serveP5Sketch } from "./p5-server";
 import {
   listSerialPorts,
@@ -148,6 +148,8 @@ ipcMain.handle("chat:send", async (event, userInput: string) => {
 
       const dir = path.dirname(patchPath);
       fs.mkdirSync(dir, { recursive: true });
+      // Close old patch in plugdata before writing new version
+      await closePatchInPd(patchPath);
       if (writePatch(patchPath, patchContent)) {
         lastPatchMtime = getPatchMtime(patchPath);
         patchInfo = {
