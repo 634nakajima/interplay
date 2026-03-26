@@ -235,8 +235,13 @@ else/keyboard → makenote → pack → else/voices~ 4 → else/tri~ → else/as
 else/osc.receive 8000 → else/osc.route /x → cyclone/scale -1024 1024 200 2000 → osc~ → else/out~
 
 ### OSC送信→p5.jsへデータ送信
-音源 → env~ → snapshot~ 50 → msg(/amp $1) → else/osc.send 7400
-（env~で振幅を取得、$1にsnapshot~の出力値が入り、/amp 0.73 のような形でp5.jsに送信される。$1を使わないと値が変化しない）
+音源 → env~ → snapshot~ 50 → / 100 → msg(/amp $1) → else/osc.send 7400
+（env~はdB値（0〜100程度）を出力するため、0〜1の範囲に正規化するには / 100 で割る。$1にsnapshot~の出力値が入り、/amp 0.73 のような形でp5.jsに送信される。$1を使わないと値が変化しない）
+
+### env~（振幅検出）の注意点
+- env~はオーディオ信号のRMS振幅をdBで出力する（0〜100程度の値）
+- 0〜1の範囲で使いたい場合は `/ 100` で正規化する
+- マイク入力の音量検出に最もよく使われる: adc~ → env~ → snapshot~ 50 → / 100
 
 ### センサ→閾値トリガー
 osc.route → abs → else/smooth 150 → > 600 → change → sel 1 → bng → 発音
@@ -376,7 +381,7 @@ connect メッセージは不要。
 
 **基本パターン（Pd → p5.js の場合）:**
 \`\`\`
-音源 → env~ → snapshot~ 50 → msg(/amp $1) → else/osc.send 7400
+音源 → env~ → snapshot~ 50 → / 100 → msg(/amp $1) → else/osc.send 7400
 \`\`\`
 
 **メッセージボックスでの $1 の意味（重要）:**
