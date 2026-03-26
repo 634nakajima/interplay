@@ -24,12 +24,11 @@ export function isPatchUpdate(filepath: string): boolean {
 export function closePatchInPd(): Promise<void> {
   return new Promise((resolve) => {
     if (process.platform === "darwin") {
-      // Quit whichever is running (errors are expected and ignored)
+      // Force-kill to avoid save dialogs blocking the process
       exec(
-        `osascript -e 'tell application "plugdata" to quit saving no' 2>/dev/null; osascript -e 'tell application "Pd" to quit saving no' 2>/dev/null`,
+        `pkill -9 plugdata 2>/dev/null; pkill -9 Pd 2>/dev/null`,
         () => {
-          // Wait for process to fully exit before opening new patch
-          setTimeout(resolve, 800);
+          setTimeout(resolve, 500);
         }
       );
     } else {
