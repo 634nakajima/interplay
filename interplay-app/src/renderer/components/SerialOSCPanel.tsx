@@ -83,6 +83,18 @@ export default function SerialOSCPanel() {
         <span className={`serial-status-dot ${connected ? "connected" : ""}`} />
       </div>
 
+      <div className="serial-dest">
+        <label>OSC送信先ポート:</label>
+        <input
+          type="text"
+          value={destPort}
+          onChange={(e) => setDestPort(e.target.value)}
+          onBlur={handleSetDest}
+          onKeyDown={(e) => e.key === "Enter" && handleSetDest()}
+          className="serial-dest-input"
+        />
+      </div>
+
       {connected ? (
         <div className="serial-connected">
           <div className="serial-info">
@@ -90,17 +102,6 @@ export default function SerialOSCPanel() {
             <button className="serial-disconnect-btn" onClick={handleDisconnect}>
               切断
             </button>
-          </div>
-          <div className="serial-dest">
-            <label>OSC送信先ポート:</label>
-            <input
-              type="text"
-              value={destPort}
-              onChange={(e) => setDestPort(e.target.value)}
-              onBlur={handleSetDest}
-              onKeyDown={(e) => e.key === "Enter" && handleSetDest()}
-              className="serial-dest-input"
-            />
           </div>
         </div>
       ) : (
