@@ -68,7 +68,10 @@ export default function ChatView({ messages, loading, onSend, onCancel, statusTe
           </div>
         )}
         {messages.map((msg, i) => (
-          <MessageBubble key={i} message={msg} />
+          <MessageBubble
+            key={i}
+            message={msg}
+          />
         ))}
         {loading && (
           <div className="message assistant">

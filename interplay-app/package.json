@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.1.81",
+    "@google/generative-ai": "^0.24.1",
     "@types/prismjs": "^1.26.6",
     "@types/ws": "^8.18.1",
     "osc-js": "^2.4.1",

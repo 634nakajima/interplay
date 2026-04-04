@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("api", {
   logout: () => ipcRenderer.invoke("auth:logout"),
   setProvider: (provider: string) => ipcRenderer.invoke("auth:setProvider", provider),
   setOpenRouterApiKey: (key: string) => ipcRenderer.invoke("auth:setOpenRouterApiKey", key),
+  setGeminiApiKey: (key: string) => ipcRenderer.invoke("auth:setGeminiApiKey", key),
   loadPatch: () => ipcRenderer.invoke("patch:load"),
   // p5.js Editor
   p5GetCode: () => ipcRenderer.invoke("p5:getCode"),

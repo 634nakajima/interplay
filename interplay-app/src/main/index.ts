@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { spawn, execSync } from "child_process";
 import path from "path";
-import { callAI, resetSession, cancelAI, getClaudeSpawnArgs, setProvider, setOpenRouterApiKey, getOpenRouterApiKey, Provider } from "./ai-service";
+import { callAI, resetSession, cancelAI, getClaudeSpawnArgs, setProvider, setOpenRouterApiKey, getOpenRouterApiKey, setGeminiApiKey, getGeminiApiKey, Provider } from "./ai-service";
 import {
   readPatch,
   writePatch,
@@ -354,6 +354,15 @@ ipcMain.handle("auth:setProvider", (_event, provider: Provider) => {
 ipcMain.handle("auth:setOpenRouterApiKey", (_event, key: string) => {
   try {
     setOpenRouterApiKey(key);
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("auth:setGeminiApiKey", (_event, key: string) => {
+  try {
+    setGeminiApiKey(key);
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
