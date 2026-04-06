@@ -877,8 +877,7 @@ body {
   flex-direction: column;
   border-left: 1px solid var(--border);
   background: var(--surface);
-  min-width: 300px;
-  max-width: 60%;
+  min-width: 200px;
 }
 
 .editor-toolbar {

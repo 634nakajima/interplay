@@ -61,7 +61,7 @@ export default function App() {
       if (!isDragging.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setChatWidth(Math.max(25, Math.min(75, pct)));
+      setChatWidth(Math.max(15, Math.min(85, pct)));
     };
     const handleMouseUp = () => {
       isDragging.current = false;
