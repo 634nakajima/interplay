@@ -7,12 +7,18 @@ interface P5EditorPanelProps {
   code: string;
   filePath: string | null;
   onCodeChange: (code: string) => void;
+  fullscreen?: boolean;
+  onEnterFullscreen?: () => void;
+  onExitFullscreen?: () => void;
 }
 
 export default function P5EditorPanel({
   code,
   filePath,
   onCodeChange,
+  fullscreen = false,
+  onEnterFullscreen,
+  onExitFullscreen,
 }: P5EditorPanelProps) {
   const [localCode, setLocalCode] = useState(code);
   const [isDirty, setIsDirty] = useState(false);
@@ -65,7 +71,7 @@ export default function P5EditorPanel({
 
   // Create webview element imperatively (React JSX doesn't support <webview>)
   useEffect(() => {
-    if (!showPreview || !previewContainerRef.current) return;
+    if ((!showPreview && !fullscreen) || !previewContainerRef.current) return;
 
     const container = previewContainerRef.current;
     container.innerHTML = "";
@@ -81,7 +87,7 @@ export default function P5EditorPanel({
       container.innerHTML = "";
       webviewElRef.current = null;
     };
-  }, [showPreview]);
+  }, [showPreview, fullscreen]);
 
   // Reload preview when code changes externally (AI generation)
   useEffect(() => {
@@ -136,7 +142,7 @@ export default function P5EditorPanel({
   const fileName = filePath ? filePath.split("/").pop() : "untitled.html";
 
   return (
-    <div className="editor-panel" ref={panelRef}>
+    <div className={`editor-panel ${fullscreen ? "editor-panel-fullscreen" : ""}`} ref={panelRef}>
       <div className="editor-toolbar">
         <span className="editor-filename">
           {isDirty ? "● " : ""}
@@ -150,6 +156,23 @@ export default function P5EditorPanel({
           >
             ▶
           </button>
+          {fullscreen ? (
+            <button
+              className="editor-btn"
+              onClick={onExitFullscreen}
+              title="全画面を終了"
+            >
+              ✕
+            </button>
+          ) : (
+            <button
+              className="editor-btn"
+              onClick={onEnterFullscreen}
+              title="プレビュー全画面"
+            >
+              ⛶
+            </button>
+          )}
           <button
             className="editor-btn"
             onClick={() => (window as any).api.p5OpenInBrowser()}
@@ -167,27 +190,29 @@ export default function P5EditorPanel({
           </button>
         </div>
       </div>
-      <div
-        className="editor-code"
-        style={{ flex: showPreview ? `0 0 ${codeHeight}%` : "1 1 100%" }}
-      >
-        <Editor
-          value={localCode}
-          onValueChange={handleChange}
-          highlight={highlight}
-          padding={12}
-          style={{
-            fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
-            fontSize: 13,
-            lineHeight: 1.5,
-            minHeight: "100%",
-          }}
-        />
-      </div>
-      {showPreview && (
+      {!fullscreen && (
+        <div
+          className="editor-code"
+          style={{ flex: showPreview ? `0 0 ${codeHeight}%` : "1 1 100%" }}
+        >
+          <Editor
+            value={localCode}
+            onValueChange={handleChange}
+            highlight={highlight}
+            padding={12}
+            style={{
+              fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
+              fontSize: 13,
+              lineHeight: 1.5,
+              minHeight: "100%",
+            }}
+          />
+        </div>
+      )}
+      {(showPreview || fullscreen) && (
         <>
-          <div className="split-handle-v" onMouseDown={handleVMouseDown} />
-          <div className="editor-preview" ref={previewContainerRef} />
+          {!fullscreen && <div className="split-handle-v" onMouseDown={handleVMouseDown} />}
+          <div className="editor-preview" ref={previewContainerRef} style={fullscreen ? { flex: 1 } : undefined} />
         </>
       )}
     </div>

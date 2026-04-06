@@ -16,10 +16,15 @@ contextBridge.exposeInMainWorld("api", {
   p5GetCode: () => ipcRenderer.invoke("p5:getCode"),
   p5SaveCode: (code: string) => ipcRenderer.invoke("p5:saveCode", code),
   p5OpenInBrowser: () => ipcRenderer.invoke("p5:openInBrowser"),
+  p5EnterFullscreen: () => ipcRenderer.invoke("p5:enterFullscreen"),
+  p5ExitFullscreen: () => ipcRenderer.invoke("p5:exitFullscreen"),
   // SerialOSC
   serialList: () => ipcRenderer.invoke("serial:list"),
   serialConnect: (portPath: string) => ipcRenderer.invoke("serial:connect", portPath),
   serialDisconnect: () => ipcRenderer.invoke("serial:disconnect"),
   serialStatus: () => ipcRenderer.invoke("serial:status"),
   serialSetDest: (host: string, port: number) => ipcRenderer.invoke("serial:setDest", host, port),
+  onGlobalKeydown: (callback: (key: string) => void) => {
+    ipcRenderer.on("global-keydown", (_event, key) => callback(key));
+  },
 });

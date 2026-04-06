@@ -1,6 +1,6 @@
 {
   "name": "interplay",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "AI-powered Pure Data patch development tool",
   "main": "dist/main/index.js",
   "scripts": {

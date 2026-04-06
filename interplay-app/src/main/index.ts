@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, globalShortcut } from "electron";
 import { spawn, execSync } from "child_process";
 import path from "path";
 import { callAI, resetSession, cancelAI, getClaudeSpawnArgs, setProvider, setOpenRouterApiKey, getOpenRouterApiKey, setGeminiApiKey, getGeminiApiKey, Provider } from "./ai-service";
@@ -360,6 +360,16 @@ ipcMain.handle("auth:setOpenRouterApiKey", (_event, key: string) => {
   }
 });
 
+ipcMain.handle("p5:enterFullscreen", () => {
+  globalShortcut.register("Escape", () => {
+    mainWindow?.webContents.send("global-keydown", "Escape");
+  });
+});
+
+ipcMain.handle("p5:exitFullscreen", () => {
+  globalShortcut.unregister("Escape");
+});
+
 ipcMain.handle("auth:setGeminiApiKey", (_event, key: string) => {
   try {
     setGeminiApiKey(key);
@@ -445,6 +455,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  globalShortcut.unregisterAll();
   stopOSCBridge();
   app.quit();
 });

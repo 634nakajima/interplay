@@ -22,6 +22,9 @@ declare global {
       p5GetCode: () => Promise<{ code: string | null; filePath: string | null }>;
       p5SaveCode: (code: string) => Promise<{ ok: boolean; filePath?: string }>;
       p5OpenInBrowser: () => Promise<void>;
+      p5EnterFullscreen: () => Promise<void>;
+      p5ExitFullscreen: () => Promise<void>;
+      onGlobalKeydown: (callback: (key: string) => void) => void;
     };
   }
 }
@@ -47,6 +50,7 @@ export default function App() {
   const [p5Code, setP5Code] = useState<string | null>(null);
   const [p5FilePath, setP5FilePath] = useState<string | null>(null);
   const [chatWidth, setChatWidth] = useState(50); // percentage
+  const [p5Fullscreen, setP5Fullscreen] = useState(false);
   const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +88,30 @@ export default function App() {
         window.api.getStatus().then(setStatus);
       }
     });
+  }, []);
+
+  // Esc key exits p5 fullscreen
+  useEffect(() => {
+    if (p5Fullscreen) {
+      window.api.p5EnterFullscreen();
+    } else {
+      window.api.p5ExitFullscreen();
+    }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && p5Fullscreen) {
+        setP5Fullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [p5Fullscreen]);
+
+  // Listen for Escape forwarded from main process (globalShortcut)
+  useEffect(() => {
+    const handler = (_key: string) => {
+      setP5Fullscreen(false);
+    };
+    window.api.onGlobalKeydown(handler);
   }, []);
 
   const handleSend = async (text: string) => {
@@ -182,7 +210,7 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app ${p5Fullscreen ? "app-p5-fullscreen" : ""}`}>
       <header className="app-header">
         <div className="header-title">
           <img src="./logo.png" alt="Interplay" className="header-logo-img" />
@@ -235,27 +263,32 @@ export default function App() {
       </header>
       {activeTab === "chat" ? (
         <div className={`main-content ${p5Code ? "has-editor" : ""}`} ref={containerRef}>
-          <div className="chat-side" style={p5Code ? { flex: `0 0 ${chatWidth}%` } : undefined}>
-            <ChatView
-              messages={messages}
-              loading={loading}
-              onSend={handleSend}
-              onCancel={async () => {
-                await window.api.cancelMessage();
-                setLoading(false);
-              }}
-              statusText={status?.patchPath || "パッチ生成時に保存先を選択できます"}
-            />
-          </div>
-          {p5Code && (
+          {!p5Fullscreen && (
             <>
-              <div className="split-handle" onMouseDown={handleMouseDown} />
-              <P5EditorPanel
-                code={p5Code}
-                filePath={p5FilePath}
-                onCodeChange={(newCode) => setP5Code(newCode)}
-              />
+              <div className="chat-side" style={p5Code ? { flex: `0 0 ${chatWidth}%` } : undefined}>
+                <ChatView
+                  messages={messages}
+                  loading={loading}
+                  onSend={handleSend}
+                  onCancel={async () => {
+                    await window.api.cancelMessage();
+                    setLoading(false);
+                  }}
+                  statusText={status?.patchPath || "パッチ生成時に保存先を選択できます"}
+                />
+              </div>
+              {p5Code && <div className="split-handle" onMouseDown={handleMouseDown} />}
             </>
+          )}
+          {p5Code && (
+            <P5EditorPanel
+              code={p5Code}
+              filePath={p5FilePath}
+              onCodeChange={(newCode) => setP5Code(newCode)}
+              fullscreen={p5Fullscreen}
+              onEnterFullscreen={() => setP5Fullscreen(true)}
+              onExitFullscreen={() => setP5Fullscreen(false)}
+            />
           )}
         </div>
       ) : (
