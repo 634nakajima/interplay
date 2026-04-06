@@ -34,27 +34,47 @@ function parseOSC(buf) {
   var type = String.fromCharCode(view.getUint8(i));
   i++;
   i += 4 - (i % 4);
-  var value = 0;
+  var value;
   if (type === 'f' && i + 4 <= view.byteLength) {
     value = view.getFloat32(i);
   } else if (type === 'i' && i + 4 <= view.byteLength) {
     value = view.getInt32(i);
+  } else if (type === 's') {
+    var sEnd = i;
+    while (sEnd < view.byteLength && view.getUint8(sEnd) !== 0) sEnd++;
+    value = String.fromCharCode.apply(null, new Uint8Array(buf, i, sEnd - i));
+  } else {
+    value = 0;
   }
   return { address: address, value: value };
 }
 
 function sendOSC(address, value) {
   if (!oscWs || oscWs.readyState !== 1) return;
-  var addrBytes = new TextEncoder().encode(address);
+  var enc = new TextEncoder();
+  var addrBytes = enc.encode(address);
   var addrLen = addrBytes.length + 1;
   addrLen += (4 - (addrLen % 4)) % 4;
   var tagLen = 4;
-  var buf = new ArrayBuffer(addrLen + tagLen + 4);
+  var isStr = typeof value === 'string';
+  var dataLen;
+  if (isStr) {
+    var strBytes = enc.encode(value);
+    dataLen = strBytes.length + 1;
+    dataLen += (4 - (dataLen % 4)) % 4;
+  } else {
+    dataLen = 4;
+  }
+  var buf = new ArrayBuffer(addrLen + tagLen + dataLen);
   var u8 = new Uint8Array(buf);
   u8.set(addrBytes, 0);
   u8[addrLen] = 44;
-  u8[addrLen + 1] = 102;
-  new DataView(buf).setFloat32(addrLen + tagLen, value);
+  u8[addrLen + 1] = isStr ? 115 : 102;
+  if (isStr) {
+    u8.set(strBytes, addrLen + tagLen);
+  } else {
+    new DataView(buf).setFloat32(addrLen + tagLen, value);
+  }
   oscWs.send(buf);
 }
 // --- end Interplay OSC Helper ---
