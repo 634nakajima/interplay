@@ -5,10 +5,12 @@ directories:
 mac:
   category: public.app-category.music
   icon: resources/icon.icns
+  artifactName: ${productName}-${arch}-mac.${ext}
   target:
     - dmg
     - zip
 win:
+  artifactName: ${productName}-Setup.${ext}
   target:
     - nsis
 files:
