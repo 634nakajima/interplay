@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
@@ -43,6 +44,10 @@ jobs:
 
   release:
     needs: build
+    # Publish whatever built successfully, even if one platform's build failed
+    # (e.g. Windows native-module compile). Without this, a single failed leg
+    # would cancel the matrix and skip the release entirely.
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
