@@ -13,7 +13,10 @@ jobs:
         include:
           - os: macos-latest
             platform: mac
-          - os: windows-latest
+          # Pinned: windows-latest is now windows-2025 (build 26100), where the
+          # serialport node-gyp rebuild fails with "Could not find any Visual
+          # Studio installation to use". windows-2022 has the working toolchain.
+          - os: windows-2022
             platform: win
 
     runs-on: ${{ matrix.os }}
